@@ -1,0 +1,12 @@
+.common_bg{background: #87aee72e;padding: 160px 140px;height: 100vh;}
+.login_bg{box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;height: calc(100vh - 320px);background: #fff;border-radius: 8px;}
+.login_img{display: flex; justify-content: center; align-items: center;height: calc(100vh - 320px);}
+.login_img img{width: 400px; height: 400px;}
+.login_form{display: flex;flex-direction: column;justify-content: center;height: calc(100vh - 320px);padding: 0 100px; gap: 12px;}
+.login_title span{font-family: "Exo 2", sans-serif;font-optical-sizing: auto;font-weight: 600;font-style: normal;font-size: 50px;}
+.login_title span:last-child{color: #5c6cbb;}
+
+
+
+
+
