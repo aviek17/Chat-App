@@ -41,5 +41,9 @@
 }
 
 
-
+.custom-login-input {
+  @apply rounded-[6px] border
+         shadow-[rgba(127,157,219,0.24)_0px_3px_8px] 
+         px-4 py-1.5 text-black font-semibold;
+}
 
