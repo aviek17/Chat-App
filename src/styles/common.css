@@ -1,0 +1,45 @@
+@import "tailwindcss";
+/* Container background */
+.common-bg {
+  @apply bg-blue-100/30 h-screen flex justify-center items-center;
+}
+
+/* Login box */
+.login-bg {
+  @apply bg-white shadow-[rgba(0,0,0,0.16)_0px_10px_36px_0px,rgba(0,0,0,0.06)_0px_0px_0px_1px] 
+         rounded-lg;
+}
+
+/* Image wrapper */
+.login-img {
+  @apply flex justify-center items-center h-full;
+}
+
+/* Login image size */
+.login-img img {
+  @apply w-[300px] h-[300px] md:w-[350px] md:h-[350px] lg:w-[400px] lg:h-[400px];
+}
+
+/* Form container */
+.login-form {
+  @apply flex flex-col justify-center gap-6 
+         pl-6 pr-0 
+         sm:pl-10 sm:pr-0 
+         md:pl-[60px] md:pr-[40px] 
+         lg:pl-[100px] lg:pr-[40px] 
+         h-full;
+}
+
+/* Title */
+.login-title {
+  @apply font-['Exo_2'] font-semibold text-4xl md:text-5xl ;
+}
+
+/* Colored span */
+.login-title span:last-child {
+  @apply text-[#5c6cbb];
+}
+
+
+
+
