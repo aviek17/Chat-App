@@ -7,10 +7,10 @@ const Login = () => {
   return (
     <>
       <div className="common-bg">
-        <div className="login-bg flex flex-col lg:flex-row h-auto sm:p-[20px] md:p-[40px] lg:p-[80px] xl:p-[100px] lg:min-w-[1000px] xl:min-w-[1400px] w-auto">
+        <div className="login-bg flex flex-col lg:flex-row h-auto p-[40px] sm:p-[20px] md:p-[40px] lg:p-[80px] xl:p-[100px] lg:min-w-[1000px] xl:min-w-[1400px] w-auto">
 
           {/* Image section */}
-          <div className="w-full lg:w-7/12">
+          <div className="hidden lg:block w-full lg:w-7/12">
             <div className="login-img">
               <img src={LogIn} alt="login" />
             </div>

@@ -23,7 +23,7 @@
 /* Form container */
 .login-form {
   @apply flex flex-col justify-center gap-6 
-         pl-6 pr-0 
+         pl-0 pr-0 
          sm:pl-10 sm:pr-0 
          md:pl-[60px] md:pr-[40px] 
          lg:pl-[100px] lg:pr-[40px] 
