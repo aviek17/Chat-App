@@ -1,14 +1,17 @@
 import { Button, Input } from "@mui/material"
 import { InputLabel } from '@mui/material';
 import LogIn from "../assets/Designer.png"
+import Logo from "../assets/Logo.svg"
 
 
 const Login = () => {
   return (
     <>
       <div className="common-bg">
-        <div className="login-bg flex flex-col lg:flex-row h-auto p-[40px] sm:p-[20px] md:p-[40px] lg:p-[80px] xl:p-[100px] lg:min-w-[1000px] xl:min-w-[1400px] w-auto">
-
+        <div className="login-bg relative flex flex-col lg:flex-row h-auto p-[40px] sm:p-[20px] md:p-[40px] lg:p-[80px] xl:p-[100px] lg:min-w-[1000px] xl:min-w-[1400px] w-auto ">
+          <div className="hidden lg:block absolute top-[10px] left-0">
+            <img src={Logo} alt="Logo" className="w-[180px]" />
+          </div>
           {/* Image section */}
           <div className="hidden lg:block w-full lg:w-7/12">
             <div className="login-img">
@@ -28,9 +31,9 @@ const Login = () => {
               <div>
                 <LoginInput />
               </div>
-              <div className="flex justify-between text-[#8e95a0] font-bold">
-                <div className="cursor-pointer text-[#355382]">Create Account</div>
-                <div className="cursor-pointer">Forgot Password?</div>
+              <div className="flex flex-col lg:flex-row  justify-center lg:justify-between text-[#8e95a0] font-bold">
+                <div className="cursor-pointer text-center lg:text-left text-[#355382]">Create Account</div>
+                <div className="cursor-pointer text-center lg:text-left">Forgot Password?</div>
               </div>
               <div>
                 <Button variant="contained" color="#434582" fullWidth
@@ -46,6 +49,7 @@ const Login = () => {
                   Sign In
                 </Button>
               </div>
+              {/*
               <div className="text-center text-[#4c4c4d]">
                 --- OR ---
               </div>
@@ -65,6 +69,7 @@ const Login = () => {
                   Google Sign In
                 </Button>
               </div>
+              */}
             </div>
           </div>
 

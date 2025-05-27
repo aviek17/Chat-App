@@ -1,12 +1,12 @@
 @import "tailwindcss";
 /* Container background */
 .common-bg {
-  @apply bg-blue-100/30 h-screen flex justify-center items-center;
+  @apply bg-[#a3cdff73] h-screen flex justify-center items-center;
 }
 
 /* Login box */
 .login-bg {
-  @apply bg-white shadow-[rgba(0,0,0,0.16)_0px_10px_36px_0px,rgba(0,0,0,0.06)_0px_0px_0px_1px] 
+  @apply bg-white shadow-[rgba(50,50,93,0.25)_0px_50px_100px_-20px,rgba(0,0,0,0.3)_0px_30px_60px_-30px]
          rounded-lg;
 }
 
@@ -25,7 +25,7 @@
   @apply flex flex-col justify-center gap-6 
          pl-0 pr-0 
          sm:pl-10 sm:pr-0 
-         md:pl-[60px] md:pr-[40px] 
+         md:pl-[30px] md:pr-[30px] 
          lg:pl-[100px] lg:pr-[40px] 
          h-full;
 }
@@ -46,4 +46,32 @@
          shadow-[rgba(127,157,219,0.24)_0px_3px_8px] 
          px-4 py-1.5 text-black font-semibold;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* normal css */
+.login-bg{box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px !important;}
 
