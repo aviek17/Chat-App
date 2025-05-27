@@ -1,4 +1,4 @@
-import { Input } from "@mui/material"
+import { Button, Input } from "@mui/material"
 import { InputLabel } from '@mui/material';
 import LogIn from "../assets/Designer.png"
 
@@ -28,6 +28,43 @@ const Login = () => {
               <div>
                 <LoginInput />
               </div>
+              <div className="flex justify-between text-[#8e95a0] font-bold">
+                <div className="cursor-pointer text-[#355382]">Create Account</div>
+                <div className="cursor-pointer">Forgot Password?</div>
+              </div>
+              <div>
+                <Button variant="contained" color="#434582" fullWidth
+                  sx={{
+                    backgroundColor: '#434582',
+                    color: '#ffffff',
+                    '&:hover': {
+                      backgroundColor: '#2f315d',
+                    },
+                    borderRadius: '6px',
+                    fontWeight: '600',
+                  }}>
+                  Sign In
+                </Button>
+              </div>
+              <div className="text-center text-[#4c4c4d]">
+                --- OR ---
+              </div>
+              <div>
+                <Button variant="contained" color="#434582" fullWidth
+                  sx={{
+                    backgroundColor: '#fff',
+                    color: '#056498',
+                    '&:hover': {
+                      backgroundColor: '#056498',
+                      color: "#fff"
+                    },
+                    paddingY: "10px",
+                    borderRadius: '6px',
+                    fontWeight: '600',
+                  }}>
+                  Google Sign In
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -45,7 +82,7 @@ const LoginInput = () => {
   return <>
     <InputLabel>Password</InputLabel>
     <Input className="w-full custom-login-input shadow-[0px_3px_8px_rgba(127,157,219,0.24)]"
-    type="password"
+      type="password"
       sx={{
         '&::before': {
           borderBottom: 'none',
