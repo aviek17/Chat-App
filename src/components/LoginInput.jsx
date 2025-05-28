@@ -3,12 +3,13 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useState } from 'react';
 
+
 const LoginInput = ({ label = "Email/Username", type = "text", placeholder = "Enter your email/username" }) => {
     return (
         <>
-            <label className="text-[#515050] text-sm font-semibold mb-[6px]">
+            {/*<label className="text-[#515050] text-sm font-semibold mb-[6px]">
                 {label}
-            </label>
+            </label>*/}
             {
                 type === "text" ? <InputText placeholder={placeholder} /> : <InputPassword placeholder={placeholder} />
             }
