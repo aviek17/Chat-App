@@ -4,14 +4,15 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useState } from 'react';
 
 
-const LoginInput = ({ label = "Email/Username", type = "text", placeholder = "Enter your email/username" }) => {
+const LoginInput = ({ type = "text", placeholder = "Enter your email/username", disabled = false }) => {
     return (
         <>
+
             {/*<label className="text-[#515050] text-sm font-semibold mb-[6px]">
                 {label}
             </label>*/}
             {
-                type === "text" ? <InputText placeholder={placeholder} /> : <InputPassword placeholder={placeholder} />
+                type === "text" ? <InputText placeholder={placeholder} disabled={disabled} /> : <InputPassword placeholder={placeholder} disabled={disabled} />
             }
 
         </>
@@ -21,16 +22,20 @@ const LoginInput = ({ label = "Email/Username", type = "text", placeholder = "En
 export default LoginInput
 
 
-const InputText = ({ placeholder }) => {
+const InputText = ({ placeholder, disabled }) => {
     return (
         <>
             <Input className="w-full custom-login-input shadow-[0px_3px_8px_rgba(127,157,219,0.24)]"
                 type={"text"}
+                disabled={disabled}
                 sx={{
                     '&::before': {
                         borderBottom: 'none',
                     },
                     '&:hover:not(.Mui-disabled):not(.Mui-error)::before': {
+                        borderBottom: 'none',
+                    },
+                    '&.Mui-disabled::before': {
                         borderBottom: 'none',
                     },
                     backgroundColor: '#f0f1ff',
@@ -55,7 +60,7 @@ const InputText = ({ placeholder }) => {
 }
 
 
-const InputPassword = ({ placeholder }) => {
+const InputPassword = ({ placeholder, disabled }) => {
     const [showPassword, setShowPassword] = useState(false);
 
     const toggleShowPassword = () => setShowPassword((prev) => !prev);
@@ -76,6 +81,9 @@ const InputPassword = ({ placeholder }) => {
                     '&::before': {
                         borderBottom: 'none',
                     },
+                    '&.Mui-disabled::before': {
+                        borderBottom: 'none',
+                    },
                     '&:hover:not(.Mui-disabled):not(.Mui-error)::before': {
                         borderBottom: 'none',
                     },
@@ -94,7 +102,7 @@ const InputPassword = ({ placeholder }) => {
                     },
                 }}
                 placeholder={placeholder}
-
+                disabled={disabled}
             />
         </>
     )
