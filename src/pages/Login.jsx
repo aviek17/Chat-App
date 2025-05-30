@@ -28,9 +28,9 @@ const Authentication = () => {
           <div className="cursor-pointer text-[0.8rem] text-center lg:text-left hover:underline">Forgot Password?</div>
         </div>
         <div>
-          <Button variant="contained" color="#434582" fullWidth
+          <Button variant="contained" fullWidth
             sx={{
-              backgroundColor: '#434582',
+              backgroundColor: '#005498',
               color: '#ffffff',
               '&:hover': {
                 backgroundColor: '#2f315d',
@@ -65,9 +65,9 @@ const Authentication = () => {
             <div className="cursor-pointer text-[0.8rem] text-center lg:text-end text-[#355382] hover:underline" onClick={() => { setLoginState(!loginState) }}>Existing User? Sign In</div>
           </div>
           <div>
-            <Button variant="contained" color="#434582" fullWidth
+            <Button variant="contained" fullWidth
               sx={{
-                backgroundColor: '#434582',
+                backgroundColor: '#005498',
                 color: '#ffffff',
                 '&:hover': {
                   backgroundColor: '#2f315d',

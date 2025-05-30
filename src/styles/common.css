@@ -1,7 +1,7 @@
 @import "tailwindcss";
 /* Container background */
 .common-bg {
-  @apply bg-[#a3cdff73] h-screen flex justify-center items-center;
+  @apply bg-[#0054983b] h-screen flex justify-center items-center;
 }
 
 /* Login box */
