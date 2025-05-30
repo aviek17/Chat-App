@@ -53,7 +53,7 @@ const InputText = ({ placeholder, disabled }) => {
                     '&.Mui-disabled::before': {
                         borderBottom: 'none',
                     },
-                    backgroundColor: '#f0f1ff',
+                    backgroundColor: '#0764af21',
                     border: 'none',
                     '&.Mui-focused': {
                         backgroundColor: 'transparent',
@@ -94,7 +94,7 @@ const InputDate = ({ placeholder, disabled }) => {
                     '&.Mui-disabled::before': {
                         borderBottom: 'none',
                     },
-                    backgroundColor: '#f0f1ff',
+                    backgroundColor: '#0764af21',
                     border: 'none',
                     '&.Mui-focused': {
                         backgroundColor: 'transparent',
@@ -182,7 +182,7 @@ const InputPassword = ({ placeholder, disabled }) => {
                     '&:hover:not(.Mui-disabled):not(.Mui-error)::before': {
                         borderBottom: 'none',
                     },
-                    backgroundColor: '#f0f1ff',
+                    backgroundColor: '#0764af21',
                     border: 'none',
                     '&.Mui-focused': {
                         backgroundColor: 'transparent',
