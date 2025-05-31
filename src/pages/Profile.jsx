@@ -1,4 +1,4 @@
-import Logo from "../assets/Logo.svg"
+import Logo from "../assets/Logo.png"
 import BoyProfilePic from "../assets/BoyProfilePhoto.jpeg"
 import GirlProfilePic from "../assets/GirlProfilePhoto.jpeg"
 import LoginInput from "../components/LoginInput"
@@ -20,7 +20,7 @@ const Profile = () => {
     return (
         <div className="common-bg">
             <div className="login-bg p-[20px] md:p-[40px] lg:p-[70px] relative rounded-lg min-h-[300px] min-w-[400px] lg:min-h-[500px] lg:min-w-[1000px]">
-                <div className="hidden lg:block absolute top-[10px] left-0">
+                <div className="hidden lg:block absolute top-[10px] left-[20px]">
                     <img src={Logo} alt="Logo" className="w-[180px]" />
                 </div>
                 <div className="grid grid-cols-12 gap-4">
