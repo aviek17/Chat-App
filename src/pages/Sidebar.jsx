@@ -6,7 +6,11 @@ import Archive from "../BoxIcons/ArchiveIcon";
 import Favorite from "../BoxIcons/FavouriteIcon";
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import DonutLargeRoundedIcon from '@mui/icons-material/DonutLargeRounded';
-import { Divider, Drawer } from '@mui/material';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import { Divider } from '@mui/material';
+import { useDispatch } from 'react-redux';
+import { toggleMenuState } from '../redux-store/slice/MenuDrawerSlice';
+import MenuDrawer from '../components/MenuDrawer';
 
 
 const Sidebar = () => {
@@ -14,12 +18,12 @@ const Sidebar = () => {
     const topGroupIcons = [MenuIcon];
     const topFunctionalitiesGroupIcon = [Chat, DonutLargeRoundedIcon];
     const bottomChatGroupIcons = [Favorite, Archive];
-    const bottomFunctionGroupIcons = [AccountCircleOutlinedIcon, Setting];
+    const bottomFunctionGroupIcons = [AccountCircleOutlinedIcon, Setting, ExitToAppIcon];
 
-
+    const dispatch = useDispatch();
 
     const onMenuClick = () => {
-        
+        dispatch(toggleMenuState());
     }
 
 
@@ -37,13 +41,13 @@ const Sidebar = () => {
                 </div>
             </div>
 
-            <Drawer open={false} onClose={onMenuClick}>
-                Drawer is opened
-            </Drawer>
+            <MenuDrawer />
+
         </>
     )
 }
 
 export default Sidebar
+
 
 
