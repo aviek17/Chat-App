@@ -1,12 +1,12 @@
-import MenuIcon from '@mui/icons-material/Menu';
+import MenuIcon from '../BoxIcons/MenuIcon';
 import SidebarIcon from '../components/SidebarIcon';
 import Chat from '../BoxIcons/ChatIcons';
 import Setting from "../BoxIcons/SettingIcon";
 import Archive from "../BoxIcons/ArchiveIcon";
 import Favorite from "../BoxIcons/FavouriteIcon";
-import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
-import DonutLargeRoundedIcon from '@mui/icons-material/DonutLargeRounded';
-import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import DonutLargeRoundedIcon from "../BoxIcons/DonutLargeRoundedIcon";
+import AccountCircleOutlinedIcon from "../BoxIcons/AccountCircleOutlinedIcon";
+import ExitToAppIcon from '../BoxIcons/ExitToApplication';
 import { Divider } from '@mui/material';
 import { useDispatch } from 'react-redux';
 import { toggleMenuState } from '../redux-store/slice/MenuDrawerSlice';
@@ -30,13 +30,13 @@ const Sidebar = () => {
     return (
         <>
             <div style={{ height: `calc(100vh - 50px)` }} className='bg-[#ffffff] w-[50px] flex flex-col justify-between items-center'>
-                <div className='mt-[15px] flex flex-col gap-1.5'>
+                <div className='mt-[15px] flex flex-col gap-1.5 items-center'>
                     <SidebarIcon iconList={topGroupIcons} onIconClick={onMenuClick} />
                     <SidebarIcon iconList={topFunctionalitiesGroupIcon} />
                 </div>
-                <div className='mt-[15px] flex flex-col gap-1.5 mb-[15px]'>
+                <div className='mt-[15px] flex flex-col gap-1.5 mb-[15px] items-center'>
                     <SidebarIcon iconList={bottomChatGroupIcons} />
-                    <Divider sx={{ borderColor: '#005498' }} />
+                    <Divider sx={{ borderColor: '#005498', borderWidth: '0.5px', width : "90%" }} />
                     <SidebarIcon iconList={bottomFunctionGroupIcons} />
                 </div>
             </div>

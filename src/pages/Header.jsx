@@ -1,11 +1,18 @@
-import Logo from "../assets/Logo.png"
+import { useSelector } from "react-redux";
+import Logo from "../assets/Logo.png";
 
 const Header = () => {
-  return (
-    <div className='px-[12px] py-[10px] bg-[#ffffff]'>
-      <img src={Logo} className="h-[30px] w-[100px] ml-[5px]"/>
-    </div>
-  )
-}
+  const menuState = useSelector((state) => state.navigationState?.menuDrawerState);
 
-export default Header
+  return (
+    <div className="px-[12px] py-[10px] bg-[#ffffff]">
+      {menuState ? (
+        <div className="h-[30px] w-[100px] ml-[5px]" />
+      ) : (
+        <img src={Logo} alt="Logo" className="h-[30px] w-[100px] ml-[5px]" />
+      )}
+    </div>
+  );
+};
+
+export default Header;

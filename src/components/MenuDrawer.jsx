@@ -3,17 +3,19 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toggleMenuState } from '../redux-store/slice/MenuDrawerSlice';
 import { Drawer } from '@mui/material';
 import Logo from "../assets/Logo_Nobg.png"
-import MenuIcon from '@mui/icons-material/Menu';
 import Chat from '../BoxIcons/ChatIcons';
-import DonutLargeRoundedIcon from '@mui/icons-material/DonutLargeRounded';
-import SidebarIcon from './SidebarIcon';
+import Setting from "../BoxIcons/SettingIcon";
+import Archive from "../BoxIcons/ArchiveIcon";
+import Favorite from "../BoxIcons/FavouriteIcon";
+import DonutLargeRoundedIcon from "../BoxIcons/DonutLargeRoundedIcon";
+import MenuIcon from '../BoxIcons/MenuIcon';
+import AccountCircleOutlinedIcon from "../BoxIcons/AccountCircleOutlinedIcon";
+import ExitToAppIcon from '../BoxIcons/ExitToApplication';
 
 const MenuDrawer = () => {
     const menuState = useSelector(state => state.navigationState?.menuDrawerState);
     const dispatch = useDispatch();
 
-    const topGroupIcons = [MenuIcon];
-    const topFunctionalitiesGroupIcon = [Chat, DonutLargeRoundedIcon];
 
     const onMenuClick = () => {
         dispatch(toggleMenuState());
@@ -25,8 +27,8 @@ const MenuDrawer = () => {
                 slotProps={{
                     paper: {
                         sx: {
-                            backgroundColor: '#00549805',
-                            backdropFilter: 'blur(20px)',
+                            backgroundColor: '#e9f5ff08',
+                            backdropFilter: 'blur(10px)',
                             borderTopRightRadius: '10px',
                             borderBottomRightRadius: '10px',
                         },
@@ -41,8 +43,10 @@ const MenuDrawer = () => {
                 <div className='w-[250px] h-full p-[5px]'>
                     <div className='relative h-[60px]'><img src={Logo} className="h-[50px] w-[170px] absolute left-[5px] top-[5px]" /></div>
                     <div className='flex flex-col justify-between'>
-                        <div className='flex flex-col gap-1.5'>
-                            <SidebarIcon iconList={topGroupIcons} onIconClick={onMenuClick} />
+                        <div className='flex flex-col gap-2.5'>
+                            <MenuIconDetails Icon={MenuIcon} />
+                            <MenuIconDetails Icon={Chat} label='Chat' statusVal={10} selected />
+                            <MenuIconDetails Icon={DonutLargeRoundedIcon} label='Status' statusVal={1} hoverReqd />
                         </div>
                     </div>
                 </div>
@@ -52,3 +56,42 @@ const MenuDrawer = () => {
 }
 
 export default memo(MenuDrawer)
+
+
+
+const MenuIconDetails = ({ Icon = Chat, label = "", statusVal = null, selected = false, hoverReqd = false }) => {
+    const dispatch = useDispatch();
+    const navigate = () => {
+        dispatch(toggleMenuState());
+    }
+    return (
+        <>
+            <div
+                className={`cursor-pointer relative flex flex-row justify-between p-[8px] rounded-[6px] 
+                ${selected ? 'bg-[#98b9d31c] shadow-[0.95px_3.95px_6.6px_#00549836]' : ''}                
+                ${hoverReqd ? 'hover:bg-[#98b9d31c] hover:shadow-[0.95px_3.95px_6.6px_#00549836]' : ''}
+                ${label ? 'w-full' : 'w-fit'}`
+                }
+
+                onClick={navigate}
+            >
+                {
+                    selected && <div className='absolute inset-y-0 left-0 w-[3px] bg-[#005498] rounded-tl-[6px] rounded-bl-[6px]'></div>
+                }
+                <div className='flex gap-[10px] items-center'>
+                    <Icon className="w-[20px] text-[#005498]" />
+                    {
+                        label &&
+                        <span className='text-[#005498] text-[15px] font-bold'>{label}</span>
+                    }
+                </div>
+                <div>
+                    {
+                        statusVal &&
+                        <div className='bg-[#005498] text-white rounded-[26%] flex text-[13px] text-center px-[8px] py-[2px]'>{statusVal}</div>
+                    }
+                </div>
+            </div>
+        </>
+    )
+}
