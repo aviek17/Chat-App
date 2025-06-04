@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleMenuState } from '../redux-store/slice/MenuDrawerSlice';
-import { Drawer } from '@mui/material';
+import { Divider, Drawer } from '@mui/material';
 import Logo from "../assets/Logo_Nobg.png"
 import Chat from '../BoxIcons/ChatIcons';
 import Setting from "../BoxIcons/SettingIcon";
@@ -42,11 +42,19 @@ const MenuDrawer = () => {
             >
                 <div className='w-[220px] h-full p-[5px]'>
                     <div className='relative h-[60px]'><img src={Logo} className="h-[50px] w-[150px] absolute left-[5px] top-[5px]" /></div>
-                    <div className='flex flex-col justify-between'>
+                    <div style={{height : 'calc(100vh - 65px)'}} className='flex flex-col justify-between'>
                         <div className='flex flex-col gap-2.5'>
                             <MenuIconDetails Icon={MenuIcon} />
                             <MenuIconDetails Icon={Chat} label='Chat' statusVal={10} selected />
-                            <MenuIconDetails Icon={DonutLargeRoundedIcon} label='Status'  hoverReqd statusSymbol/>
+                            <MenuIconDetails Icon={DonutLargeRoundedIcon} label='Status' hoverReqd statusSymbol />
+                        </div>
+                        <div className='mt-[15px] flex flex-col gap-1.5 mb-[15px] items-center'>
+                            <MenuIconDetails Icon={Favorite} label='Bookmarked Chats' />
+                            <MenuIconDetails Icon={Archive} label='Archived Chats' />
+                            <Divider sx={{ borderColor: '#005498', width: "90%" }} />
+                            <MenuIconDetails Icon={AccountCircleOutlinedIcon} label='Profile' />
+                            <MenuIconDetails Icon={Setting} label='Setting' />
+                            <MenuIconDetails Icon={ExitToAppIcon} label='Exit App' />
                         </div>
                     </div>
                 </div>
@@ -59,7 +67,7 @@ export default memo(MenuDrawer)
 
 
 
-const MenuIconDetails = ({ Icon = Chat, label = "", statusVal = null, selected = false, hoverReqd = false, statusSymbol = false }) => {
+const MenuIconDetails = ({ Icon = Chat, label = "", statusVal = null, selected = false, hoverReqd = true, statusSymbol = false }) => {
     const dispatch = useDispatch();
     const navigate = () => {
         dispatch(toggleMenuState());
