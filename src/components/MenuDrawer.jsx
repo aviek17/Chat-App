@@ -40,13 +40,13 @@ const MenuDrawer = () => {
                     }
                 }}
             >
-                <div className='w-[250px] h-full p-[5px]'>
-                    <div className='relative h-[60px]'><img src={Logo} className="h-[50px] w-[170px] absolute left-[5px] top-[5px]" /></div>
+                <div className='w-[220px] h-full p-[5px]'>
+                    <div className='relative h-[60px]'><img src={Logo} className="h-[50px] w-[150px] absolute left-[5px] top-[5px]" /></div>
                     <div className='flex flex-col justify-between'>
                         <div className='flex flex-col gap-2.5'>
                             <MenuIconDetails Icon={MenuIcon} />
                             <MenuIconDetails Icon={Chat} label='Chat' statusVal={10} selected />
-                            <MenuIconDetails Icon={DonutLargeRoundedIcon} label='Status' statusVal={1} hoverReqd />
+                            <MenuIconDetails Icon={DonutLargeRoundedIcon} label='Status'  hoverReqd statusSymbol/>
                         </div>
                     </div>
                 </div>
@@ -59,7 +59,7 @@ export default memo(MenuDrawer)
 
 
 
-const MenuIconDetails = ({ Icon = Chat, label = "", statusVal = null, selected = false, hoverReqd = false }) => {
+const MenuIconDetails = ({ Icon = Chat, label = "", statusVal = null, selected = false, hoverReqd = false, statusSymbol = false }) => {
     const dispatch = useDispatch();
     const navigate = () => {
         dispatch(toggleMenuState());
@@ -67,7 +67,7 @@ const MenuIconDetails = ({ Icon = Chat, label = "", statusVal = null, selected =
     return (
         <>
             <div
-                className={`cursor-pointer relative flex flex-row justify-between p-[8px] rounded-[6px] 
+                className={`cursor-pointer relative flex flex-row justify-between p-[8px] rounded-[6px]  items-center
                 ${selected ? 'bg-[#98b9d31c] shadow-[0.95px_3.95px_6.6px_#00549836]' : ''}                
                 ${hoverReqd ? 'hover:bg-[#98b9d31c] hover:shadow-[0.95px_3.95px_6.6px_#00549836]' : ''}
                 ${label ? 'w-full' : 'w-fit'}`
@@ -82,13 +82,17 @@ const MenuIconDetails = ({ Icon = Chat, label = "", statusVal = null, selected =
                     <Icon className="w-[20px] text-[#005498]" />
                     {
                         label &&
-                        <span className='text-[#005498] text-[15px] font-bold'>{label}</span>
+                        <span className='text-[#005498] text-[13px] font-bold'>{label}</span>
                     }
                 </div>
                 <div>
                     {
                         statusVal &&
-                        <div className='bg-[#005498] text-white rounded-[26%] flex text-[13px] text-center px-[8px] py-[2px]'>{statusVal}</div>
+                        <div className='bg-[#005498] text-white rounded-[36%] flex text-[11px] text-center px-[6px] py-[2px]'>{statusVal}</div>
+                    }
+                    {
+                        statusSymbol &&
+                        <div className='bg-[#005498] text-white rounded-full flex text-[13px] text-center px-[4px] py-[4px] w-[6px] h-[6px]'></div>
                     }
                 </div>
             </div>
