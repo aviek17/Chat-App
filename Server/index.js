@@ -1,0 +1,1 @@
+console.log("Entered in index js file")
