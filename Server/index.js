@@ -5,6 +5,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 
 const userRouter = require('./routes/user');
+const errorHandler = require('./middlewares/errorHandler');
 
 
 const app = express();
@@ -18,6 +19,11 @@ mongoose.connect(process.env.MONGO_URI)
   
 
 app.use('/user', userRouter);
+
+
+
+//global error handler
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

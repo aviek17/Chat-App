@@ -1,10 +1,11 @@
+const AuthError = require('../errors/AuthError');
 const firebase = require('../service/firebase');
 
 const firebaseAuthMiddleware = async (req, res, next) => {
   const idToken = req.headers.authorization?.split('Bearer ')[1];
 
   if (!idToken) {
-    return res.status(401).json({ message: 'No token provided' });
+    throw new AuthError('Invalid token');
   }
 
   try {
@@ -12,8 +13,7 @@ const firebaseAuthMiddleware = async (req, res, next) => {
     req.user = decodedToken;
     next();
   } catch (error) {
-    console.error('Token verification failed:', error);
-    res.status(401).json({ message: 'Unauthorized' });
+    next(error)
   }
 };
 
