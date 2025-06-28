@@ -3,9 +3,12 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 require('dotenv').config();
 const mongoose = require('mongoose');
+const http = require('http');
+const socketServer = require('socket.io');
 
 const userRouter = require('./routes/user');
 const errorHandler = require('./middlewares/errorHandler');
+const socketHandler = require("./service/SocketService");
 
 
 const app = express();
@@ -25,6 +28,17 @@ app.use('/user', userRouter);
 //global error handler
 app.use(errorHandler)
 
+const server = http.createServer(app);
+
+//socket server setup
+const io = socketServer(server, {
+  cors: {
+    origin: '*',
+    methods: ['*']
+  }
+});
+socketHandler(io);
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
