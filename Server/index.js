@@ -9,6 +9,7 @@ const socketServer = require('socket.io');
 const userRouter = require('./routes/user');
 const errorHandler = require('./middlewares/errorHandler');
 const socketHandler = require("./service/SocketService");
+const socketAuthMiddleware = require('./middlewares/socketAuth');
 
 
 const app = express();
@@ -33,10 +34,11 @@ const server = http.createServer(app);
 //socket server setup
 const io = socketServer(server, {
   cors: {
-    origin: '*',
+    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
     methods: ['*']
   }
 });
+io.use(socketAuthMiddleware);
 socketHandler(io);
 
 const PORT = process.env.PORT || 5000;
