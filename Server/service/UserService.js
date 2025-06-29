@@ -26,7 +26,14 @@ const handleUserCreation = async (userInfo) => {
 }
 
 
+const handleUserLogin = async (userInfo) => {
 
-module.exports = { handleUserCreation };
+}
+
+
+module.exports = { handleUserCreation, handleUserLogin };
+
+
+
 
 

@@ -14,6 +14,8 @@ const UserSchema = new mongoose.Schema({
     password:       { type: String, minlength: 6, select: false, required : true }
 });
 
+// Index for faster queries
+UserSchema.index({ username: 1 });
 
 UserSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
