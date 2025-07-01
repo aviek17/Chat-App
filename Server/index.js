@@ -34,11 +34,11 @@ const server = http.createServer(app);
 //socket server setup
 const io = socketServer(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
-    methods: ['*']
+    origin: "*", //process.env.CORS_ORIGIN || "http://localhost:3000",
+    methods: ['GET', 'POST']
   }
 });
-io.use(socketAuthMiddleware);
+//io.use(socketAuthMiddleware);
 socketHandler(io);
 
 const PORT = process.env.PORT || 5000;
