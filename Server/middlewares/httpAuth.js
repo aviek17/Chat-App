@@ -1,5 +1,6 @@
 // middleware/httpAuth.js - For HTTP requests
 const { verifyAndRefresh } = require('../utils/jwtUtils');
+const logger = require("../utils/logger");
 
 const httpAuthMiddleware = async (req, res, next) => {
     try {
@@ -44,7 +45,7 @@ const httpAuthMiddleware = async (req, res, next) => {
 
         next();
     } catch (error) {
-        console.error('HTTP Auth Error:', error);
+        logger.error('HTTP Auth Error:', error);
         error.statusCode = 401;
         error.message = 'Invalid token';
         next(error); 

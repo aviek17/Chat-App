@@ -1,5 +1,5 @@
 const { verifyToken } = require('../utils/jwtUtils');
-
+const logger = require("../utils/logger");
 
 const socketAuthMiddleware = async (socket, next) => {
     try {
@@ -25,7 +25,7 @@ const socketAuthMiddleware = async (socket, next) => {
 
         next();
     } catch (error) {
-        console.error('HTTP Auth Error:', error);
+        logger.error('HTTP Auth Error:', error);
         error.statusCode = 401;
         error.message = 'Invalid token';
         next(error);

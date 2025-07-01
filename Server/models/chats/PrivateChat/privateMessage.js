@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
+const logger = require("../../../utils/logger");
 
 
 // Encryption configuration
@@ -87,7 +88,7 @@ messageSchema.virtual('content').get(function () {
 
     return decrypted;
   } catch (error) {
-    console.error('Decryption error:', error);
+    logger.error('Decryption error:', error);
     return null;
   }
 });
