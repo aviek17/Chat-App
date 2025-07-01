@@ -20,7 +20,8 @@ app.use(bodyParser.json());
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => logger.success('MongoDB connected'))
-  .catch(err => logger.error('MongoDB connection error:', err));
+  .catch(err => logger.error('MongoDB connection error: '+ err));
+
   
 
 app.use('/user', userRouter);
@@ -39,7 +40,7 @@ const io = socketServer(server, {
     methods: ['GET', 'POST']
   }
 });
-//io.use(socketAuthMiddleware);
+io.use(socketAuthMiddleware);
 socketHandler(io);
 
 const PORT = process.env.PORT || 5000;
