@@ -5,6 +5,9 @@ class ChatSocketController {
 
   // Initialize all event handlers for a socket connection
   initializeEventHandlers(socket) {
+
+    // Authentication event
+    socket.on('authenticate', (data) => this.handleAuthenticate(socket, data));
     
     // Message events
     socket.on('send_message', (data) => this.handleSendMessage(socket, data));
@@ -54,6 +57,16 @@ class ChatSocketController {
     socket.on('check_user_online', (data) => this.handleCheckUserOnline(socket, data));
   }
 
+  //User added to Active user list
+  async handleAuthenticate(socket, data) {
+    try{
+      console.log(socket, data)
+      await this.chatSocketService.addCurrentUserToOnlineUsersList(socket, data);
+    }catch(err){
+      console.error('Controller - Authentication error:', err);
+      socket.emit('error', { message: 'Authentication failed' });
+    }
+  }
 
   // Message handlers
   async handleSendMessage(socket, data) {

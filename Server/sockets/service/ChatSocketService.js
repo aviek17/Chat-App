@@ -1,6 +1,7 @@
 const ChatService = require('../../service/chat/ChatService');
 const ChatRepository = require('../../repo/ChatRepo');
 const { validateObjectId, validateMessageContent } = require('../../validation/message');
+const log = require('../../utils/logger');
 
 class ChatSocketService {
   constructor(io) {
@@ -39,44 +40,41 @@ class ChatSocketService {
   }
 
   // Handle user authentication
-  async handleAuthentication(socket, data) {
+  async addCurrentUserToOnlineUsersList(socket, data) {
     try {
-      const { userId, token } = data;
+      const { userId } = data;
       
       if (!validateObjectId(userId)) {
         socket.emit('auth_error', { message: 'Invalid user ID' });
         return;
       }
 
-      // TODO: Implement token verification
-      // const isValidToken = await this.verifyToken(token, userId);
-      // if (!isValidToken) {
-      //   socket.emit('auth_error', { message: 'Invalid token' });
-      //   return;
-      // }
-
       // Store user connection
       this.activeUsers.set(userId, socket.id);
       socket.userId = userId;
+      socket.emit('authenticate', { userId: userId });
 
       // Update user online status
       await this.chatRepository.updateUserOnlineStatus(userId, true);
 
       // Get and send recent chats
       const recentChats = await ChatService.getRecentChats(userId);
+
+      console.log("recentChats ", recentChats)
       
       socket.emit('authenticated', {
-        message: 'Successfully authenticated',
+        message: 'Welcome to Talk Sphere',
         recentChats,
         userId
       });
 
       // Notify contacts that user is online
-      this.broadcastUserStatus(userId, 'online');
+      //this.broadcastUserStatus(userId, 'online');
 
-      console.log(`✅ User ${userId} authenticated with socket ${socket.id}`);
+      log.success(`User ${userId} authenticated with socket ${socket.id}`);
     } catch (error) {
-      console.error('❌ Authentication error:', error);
+      console.log(error)
+      log.error('Authentication error:', error);
       socket.emit('auth_error', { message: 'Authentication failed' });
     }
   }

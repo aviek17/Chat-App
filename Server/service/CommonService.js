@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 //methods 
 const generateUniqueUserId = (email) => {
     const emailHash = crypto.createHash('sha256').update(email).digest('hex').substring(0, 8);

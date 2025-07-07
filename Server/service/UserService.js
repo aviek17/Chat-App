@@ -1,4 +1,3 @@
-const crypto = require('crypto');
 const { findUserByEmail, createUser } = require('../repo/UserRepo');
 const { generateToken } = require('../utils/jwtUtils');
 const { generateUniqueUserId } = require('./CommonService');
