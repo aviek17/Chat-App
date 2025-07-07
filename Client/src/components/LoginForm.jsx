@@ -5,6 +5,7 @@ import InputField from './InputField.jsx';
 import SuccessModal from './SuccessModal.jsx';
 import ChatLoginSVG from './ChatLoginSVG.jsx';
 import { colors } from '../styles/theme.js';
+import Logo from '../assets/Logo_Nobg.png'; // Assuming you have a logo image in your assets folder
 
 const LoginForm = () => {
     const [isDark, setIsDark] = useState(false);
@@ -148,18 +149,14 @@ const LoginForm = () => {
                 <div className="w-full max-w-md">
                     {/* Logo */}
                     <div className="text-center mb-8">
-                        <div
-                            className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center shadow-lg"
-                            style={{ backgroundColor: colors.primary.main }}
-                        >
-                            <MessageCircle className="w-8 h-8 text-white" />
+                        
+                        <div className="mb-2 flex  justify-center">
+                            <img
+                                src={Logo}
+                                alt="ChatConnect Logo"
+                                className="h-20"
+                            />
                         </div>
-                        <h1
-                            className="text-2xl font-bold mb-2"
-                            style={{ color: isDark ? colors.text.dark.primary : colors.text.light.primary }}
-                        >
-                            ChatConnect
-                        </h1>
                         <p
                             className="text-sm"
                             style={{ color: isDark ? colors.text.dark.secondary : colors.text.light.secondary }}
