@@ -2,17 +2,16 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './App.css'
 import App from './App.jsx'
-
-
-//styles
-import "./styles/common.css"
 import { Provider } from 'react-redux'
-import { store } from './redux-store/store.js'
+import { store } from './store/index.js';
+import { ThemeProvider } from './store/context/ThemeProvider.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Provider store={store}>
-      <App />
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
     </Provider>
   </StrictMode>
 )
