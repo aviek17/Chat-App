@@ -27,21 +27,38 @@ class ChatRepository {
       }
     }
       */
-    
+
 
     // Update message with attachment reference
-   /*async updateMessageWithAttachment(messageId, attachmentId) {
+    /*async updateMessageWithAttachment(messageId, attachmentId) {
+         try {
+             const message = await Message.findByIdAndUpdate(
+                 messageId,
+                 { attachment: attachmentId },
+                 { new: true }
+             );
+             return message;
+         } catch (error) {
+             throw new Error(`Failed to update message with attachment: ${error.message}`);
+         }
+     }*/
+
+    // Update user online status
+    async updateUserOnlineStatus(userId, isOnline) {
         try {
-            const message = await Message.findByIdAndUpdate(
-                messageId,
-                { attachment: attachmentId },
+            const user = await User.findByIdAndUpdate(
+                userId,
+                {
+                    isOnline: isOnline,
+                    lastSeen: isOnline ? null : new Date()
+                },
                 { new: true }
             );
-            return message;
+            return user;
         } catch (error) {
-            throw new Error(`Failed to update message with attachment: ${error.message}`);
+            throw new Error(`Failed to update user online status: ${error.message}`);
         }
-    }*/
+    }
 
     // Get message by ID with population
     async getMessageById(messageId, populateOptions = []) {
