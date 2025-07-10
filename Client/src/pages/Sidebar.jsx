@@ -9,7 +9,7 @@ import AccountCircleOutlinedIcon from "../BoxIcons/AccountCircleOutlinedIcon";
 import ExitToAppIcon from '../BoxIcons/ExitToApplication';
 import { Divider } from '@mui/material';
 import { useDispatch } from 'react-redux';
-import { toggleMenuState } from '../redux-store/slice/MenuDrawerSlice';
+import { toggleMenuState } from '../store/slice/menuDrawerSlice';
 import MenuDrawer from '../components/MenuDrawer';
 
 
