@@ -395,3 +395,4 @@ export const tailwindClasses = {
     hover: 'hover:bg-[#005498] hover:text-white'
   }
 };
+
