@@ -1,5 +1,5 @@
 import Header from '../pages/Header'
-import MainContainer from '../pages/MainContainer';
+import MainContainer from '../pages/MainContainer'
 import Sidebar from '../pages/Sidebar'
 
 const MainLayout = () => {
@@ -8,7 +8,7 @@ const MainLayout = () => {
             <Header />
             <div className='flex flex-row'>
                 <Sidebar />
-                <MainContainer />
+                <MainContainer/>
             </div>
         </div>
     )

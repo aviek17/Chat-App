@@ -4,13 +4,17 @@ import InputField from './InputField';
 import SuccessModal from './SuccessModal';
 import ChatRegisterSVG from './ChatRegisterSVG';
 import { colors } from '../styles/theme.js';
-import Logo from "../assets/Logo_Nobg.png"; // Assuming you have a logo image in your assets folder
+import Logo from "../assets/Logo_Nobg.png"; 
+import { useNavigate } from 'react-router-dom';
+
 
 const RegisterForm = () => {
     const [isDark, setIsDark] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+    const navigate = useNavigate();
 
     // Form states
     const [formData, setFormData] = useState({
@@ -85,6 +89,7 @@ const RegisterForm = () => {
             });
 
             setShowSuccessModal(true);
+            navigate("/profile")
 
         } catch (error) {
             console.error('Authentication error:', error);
@@ -253,7 +258,7 @@ const RegisterForm = () => {
                             type="button"
                             onClick={() => {
                                 // Navigate to login page
-                                window.location.href = '/login';
+                                //window.location.href = '/login';
                             }}
                             className="font-semibold transition-colors duration-300 hover:underline"
                             style={{ color: colors.primary.main }}
