@@ -2,7 +2,7 @@ import { useSelector } from "react-redux";
 import Logo from "../assets/Logo.png";
 
 const Header = () => {
-  const menuState = useSelector((state) => state.navigationState?.menuDrawerState);
+  const menuState = useSelector((state) => state.navigation?.menuDrawerState);
 
   return (
     <div className="px-[12px] py-[10px] bg-[#ffffff]">
