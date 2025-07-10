@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { toggleMenuState } from '../redux-store/slice/MenuDrawerSlice';
+import { toggleMenuState } from '../store/slice/menuDrawerSlice';
 import { Divider, Drawer } from '@mui/material';
 import Logo from "../assets/Logo_Nobg.png"
 import Chat from '../BoxIcons/ChatIcons';
@@ -13,7 +13,7 @@ import AccountCircleOutlinedIcon from "../BoxIcons/AccountCircleOutlinedIcon";
 import ExitToAppIcon from '../BoxIcons/ExitToApplication';
 
 const MenuDrawer = () => {
-    const menuState = useSelector(state => state.navigationState?.menuDrawerState);
+    const menuState = useSelector(state => state.navigation?.menuDrawerState);
     const dispatch = useDispatch();
 
 

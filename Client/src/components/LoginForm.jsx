@@ -6,7 +6,7 @@ import SuccessModal from './SuccessModal.jsx';
 import ChatLoginSVG from './ChatLoginSVG.jsx';
 import { colors } from '../styles/theme.js';
 import Logo from '../assets/Logo_Nobg.png'; // Assuming you have a logo image in your assets folder
-
+import LeftSectionImage from "../assets/Designer.svg"
 const LoginForm = () => {
     const [isDark, setIsDark] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -140,7 +140,8 @@ const LoginForm = () => {
                     }}
                 />
                 <div className="relative z-10 w-full max-w-lg">
-                    <ChatLoginSVG isDark={isDark} />
+                    {/* <ChatLoginSVG isDark={isDark} /> */}
+                    <img src={LeftSectionImage} alt="" />
                 </div>
             </div>
 
@@ -259,7 +260,7 @@ const LoginForm = () => {
                             type="button"
                             onClick={() => {
                                 // Navigate to register page
-                                window.location.href = '/register';
+                                //window.location.href = '/register';
                             }}
                             className="font-semibold transition-colors duration-300 hover:underline"
                             style={{ color: colors.primary.main }}
