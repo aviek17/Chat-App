@@ -1,10 +1,11 @@
-import React from 'react'
+import ChatContainer from '../components/ChatContainer'
 import ChatListContainer from './ChatListContainer'
 
 const MainContainer = () => {
   return (
-    <div className='flex flex-row'>
-      <ChatListContainer/>
+    <div className='w-full flex flex-row'>
+      <div className='w-[400px]'><ChatListContainer/></div>
+      <ChatContainer/>
     </div>
   )
 }

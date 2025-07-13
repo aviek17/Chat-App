@@ -40,7 +40,7 @@ const MenuDrawer = () => {
                     }
                 }}
             >
-                <div className='w-[220px] h-full p-[5px]'>
+                <div className='w-[320px] h-full p-[5px]'>
                     <div className='relative h-[60px]'><img src={Logo} className="h-[50px] w-[150px] absolute left-[5px] top-[5px]" /></div>
                     <div style={{height : 'calc(100vh - 65px)'}} className='flex flex-col justify-between'>
                         <div className='flex flex-col gap-2.5'>
