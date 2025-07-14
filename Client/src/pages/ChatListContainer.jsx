@@ -67,8 +67,7 @@ const ChatListContainer = () => {
   };
 
   const headerStyle = {
-    backgroundColor: currentColors.background.primary,
-    borderBottom: `1px solid ${theme === 'light' ? '#e0e0e0' : '#383838'}`
+    backgroundColor: currentColors.background.primary
   };
 
   const searchStyle = {
@@ -87,7 +86,7 @@ const ChatListContainer = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen w-80 bg-white" style={sidebarStyle}>
+    <div className="flex flex-col h-[calc(100vh-50px)] w-80 bg-white" style={sidebarStyle}>
       {/* Header */}
       <div className="flex items-center justify-between p-4" style={headerStyle}>
         <div className="flex items-center space-x-3">
@@ -97,9 +96,7 @@ const ChatListContainer = () => {
           <span className="font-medium text-lg">Chats</span>
         </div>
         <div className="flex items-center space-x-2">
-          <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-            <MessageCircle size={20} style={{ color: currentColors.text.secondary }} />
-          </button>
+          
           <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
             <MoreVertical size={20} style={{ color: currentColors.text.secondary }} />
           </button>
@@ -153,9 +150,7 @@ const ChatListContainer = () => {
 
 
       <div ref={chatListRef}
-        className={`overflow-y-auto h-[700px] transition-all duration-300 ${isScrolling ? 'scrollbar-visible' : 'scrollbar-hidden'
-          }`}
-        onScroll={handleScroll}>
+        className={`flex-1 overflow-y-auto transition-all duration-300 scrollbar-visible}`}>
         {mockChats.map((chat) => (
           <div
             key={chat.id}
@@ -202,6 +197,9 @@ const ChatListContainer = () => {
           </div>
         ))}
       </div>
+
+        <div className='h-[15px]'></div>
+
     </div>
   )
 }
