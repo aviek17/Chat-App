@@ -29,7 +29,7 @@ const Sidebar = () => {
 
     return (
         <>
-            <div style={{ height: `calc(100vh - 50px)` }} className='bg-[#ffffff] w-[50px] flex flex-col justify-between items-center'>
+            <div style={{ height: `calc(100vh - 50px)` }} className='bg-[#f3f3f3] w-[50px] flex flex-col justify-between items-center'>
                 <div className='mt-[5px] flex flex-col gap-1.5 items-center'>
                     <SidebarIcon iconList={topGroupIcons} onIconClick={onMenuClick} />
                     <SidebarIcon iconList={topFunctionalitiesGroupIcon} />
