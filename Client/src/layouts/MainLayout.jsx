@@ -4,7 +4,7 @@ import Sidebar from '../pages/Sidebar'
 
 const MainLayout = () => {
     return (
-        <div className='bg-[#ffffff] h-screen w-full flex flex-col overflow-hidden'>
+        <div className='bg-[#f3f3f3] h-screen w-full flex flex-col overflow-hidden'>
             <Header />
             <div className='flex flex-row flex-1'>
                 <Sidebar />
