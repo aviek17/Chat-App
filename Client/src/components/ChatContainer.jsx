@@ -1,10 +1,108 @@
 import { useSelector } from "react-redux";
 import { colors } from "../styles/theme";
+import { useState } from "react";
+import ChatHeader from "./ChatHeader";
+import MessageList from "./MessageList";
+
+
+const mockContact = {
+    id: 1,
+    name: 'Sarah Wilson',
+    avatar: 'SW',
+    status: 'online', // 'online', 'away', 'offline'
+    lastSeen: 'last seen 2 hours ago'
+};
+const mockMessages = [
+    {
+        id: 1,
+        type: 'text',
+        content: 'Hey! How are you doing?',
+        timestamp: '2024-01-20T10:30:00Z',
+        sender: 'other',
+        senderName: 'Sarah Wilson',
+        senderAvatar: 'SW',
+        status: 'read'
+    },
+    {
+        id: 2,
+        type: 'text',
+        content: 'I\'m doing great! Just finished my morning workout. How about you?',
+        timestamp: '2024-01-20T10:32:00Z',
+        sender: 'user',
+        status: 'read'
+    },
+    {
+        id: 3,
+        type: 'text',
+        content: 'That\'s awesome! I should really get back into working out. Any tips for getting motivated?',
+        timestamp: '2024-01-20T10:35:00Z',
+        sender: 'other',
+        senderName: 'Sarah Wilson',
+        senderAvatar: 'SW',
+        status: 'read'
+    },
+    {
+        id: 4,
+        type: 'text',
+        content: 'Start small! Even 10 minutes a day makes a difference. The key is consistency over intensity.',
+        timestamp: '2024-01-20T10:37:00Z',
+        sender: 'user',
+        status: 'read'
+    },
+    {
+        id: 5,
+        type: 'text',
+        content: 'You\'re absolutely right. I think I\'ll start with some light yoga tomorrow morning.',
+        timestamp: '2024-01-20T10:40:00Z',
+        sender: 'other',
+        senderName: 'Sarah Wilson',
+        senderAvatar: 'SW',
+        status: 'read'
+    },
+    {
+        id: 6,
+        type: 'text',
+        content: 'That sounds perfect! Yoga is such a great way to start the day. Let me know how it goes!',
+        timestamp: '2024-01-20T10:42:00Z',
+        sender: 'user',
+        status: 'delivered'
+    },
+    {
+        id: 7,
+        type: 'text',
+        content: 'Will do! Thanks for the encouragement 😊',
+        timestamp: '2024-01-20T14:15:00Z',
+        sender: 'other',
+        senderName: 'Sarah Wilson',
+        senderAvatar: 'SW',
+        status: 'read'
+    },
+    {
+        id: 8,
+        type: 'text',
+        content: 'By the way, are we still on for lunch tomorrow?',
+        timestamp: '2024-01-20T14:16:00Z',
+        sender: 'other',
+        senderName: 'Sarah Wilson',
+        senderAvatar: 'SW',
+        status: 'read'
+    },
+    {
+        id: 9,
+        type: 'text',
+        content: 'Absolutely! 12:30 PM at that new Italian place, right?',
+        timestamp: '2024-01-20T14:20:00Z',
+        sender: 'user',
+        status: 'sent'
+    }
+];
 
 const ChatContainer = () => {
 
     const theme = useSelector((state) => state.theme.themeMode);
-    const selectedChatId = null;
+    const selectedChatId = "some id";
+    const [messages, setMessages] = useState(mockMessages);
+    const [contact] = useState(mockContact);
 
     const currentColors = {
         background: colors.background[theme],
@@ -42,8 +140,12 @@ const ChatContainer = () => {
 
 
     return (
-        <div className="bg-white flex-1">
-            chat
+        <div
+            className="flex-1 flex flex-col h-[calc(100vh-50px)]"
+            style={{ backgroundColor: currentColors.background.primary }}
+        >
+            <ChatHeader contact={contact} theme={theme} colors={colors} />
+            <MessageList messages={messages} theme={theme} colors={colors} />
         </div>
     )
 }
