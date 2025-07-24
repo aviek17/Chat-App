@@ -3,7 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 // Initial state
 const initialState = {
   isDarkMode: false,
-  themeMode: 'light',
+  themeMode: 'dark',
   isLoading: false,
   systemPreference: false,
 };
@@ -39,7 +39,6 @@ const themeSlice = createSlice({
       state.isDarkMode = !state.isDarkMode;
       state.themeMode = state.isDarkMode ? 'dark' : 'light';
       
-      // Save to localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('chatAppTheme', state.themeMode);
       }
@@ -49,7 +48,6 @@ const themeSlice = createSlice({
       state.isDarkMode = mode === 'dark';
       state.themeMode = mode;
       
-      // Save to localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('chatAppTheme', mode);
       }
