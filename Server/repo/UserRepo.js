@@ -1,8 +1,13 @@
 const User = require('../models/User');
 
-const findUserByEmail = async (email) => {
-  return await User.findOne({ email });
+const findUserByEmail = async (email, includePassword = false) => {
+  const query = User.findOne({ email });
+  if (includePassword) {
+    query.select('+password');
+  }
+  return await query;
 };
+
 
 const createUser = async (userData) => {
   const user = new User(userData);

@@ -23,4 +23,12 @@ UserSchema.pre('save', async function (next) {
     next();
 });
 
+UserSchema.methods.comparePassword = async function (candidatePassword) {
+    if (!this.password) {
+        throw new Error('Password not set on user document');
+    }
+    return await bcrypt.compare(candidatePassword, this.password);
+};
+
+
 module.exports = mongoose.model('User', UserSchema);

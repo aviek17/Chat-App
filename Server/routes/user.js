@@ -11,4 +11,6 @@ const validateRequest = require('../middlewares/validator');
 //routing
 router.post('/sign-up', validateRequest(userRequestSchema), userController.signup);
 
+router.post("/login",  validateRequest(userRequestSchema), userController.login)
+
 module.exports = router;
