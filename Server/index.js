@@ -23,13 +23,10 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => logger.error('MongoDB connection error: ' + err));
 
 
+const contextPath = process.env.CONTEXT_PATH || '';
 
-app.use('/user', userRouter);
+app.use( `${contextPath}/user` , userRouter);
 
-
-
-//global error handler
-app.use(errorHandler)
 
 const server = http.createServer(app);
 
@@ -46,14 +43,17 @@ const io = new Server(server, {
 //io.use(socketAuthMiddleware);
 // Add this debug logging
 io.engine.on("connection_error", (err) => {
-  console.log("❌ Socket.IO connection error:", err.req);
-  console.log("❌ Error code:", err.code);
-  console.log("❌ Error message:", err.message);
-  console.log("❌ Error context:", err.context);
+  logger.error("Socket.IO connection error:", err.req);
+  logger.error("Error code:", err.code);
+  logger.error("Error message:", err.message);
+  logger.error("Error context:", err.context);
 });
 
-console.log("🔧 Socket.IO server initialized");
+logger.success(" Socket.IO server initialized");
 socketHandler(io);
+
+//global error handler
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => logger.info(`Server running on port ${PORT}`));

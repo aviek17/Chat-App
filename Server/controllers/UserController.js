@@ -1,15 +1,25 @@
+const logger = require('./../utils/logger');
+
 const userService = require("../service/UserService")
 
 
 const signup = async (req, res, next) => {
     try {
-        console.log(req.validatedBody)
         const responseData = await userService.handleUserCreation(req.validatedBody);
         res.status(200).json(responseData);
     } catch (err) {
-        console.log(err)
-        next(err.error);
+        next(err);
     }
 }
 
-module.exports = { signup };
+
+const login = async (req, res, next) => {
+    try{
+        const responseData = await userService.handleUserLogin(req.validatedBody);
+        res.status(200).json(responseData);
+    }catch(err) {
+        next(err);
+    }
+}
+
+module.exports = { signup, login };
