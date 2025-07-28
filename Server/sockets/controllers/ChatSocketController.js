@@ -60,7 +60,6 @@ class ChatSocketController {
   //User added to Active user list
   async handleAuthenticate(socket, data) {
     try{
-      console.log(socket, data)
       await this.chatSocketService.addCurrentUserToOnlineUsersList(socket, data);
     }catch(err){
       console.error('Controller - Authentication error:', err);

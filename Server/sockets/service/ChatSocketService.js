@@ -43,7 +43,6 @@ class ChatSocketService {
   async addCurrentUserToOnlineUsersList(socket, data) {
     try {
       const { userId } = data;
-      
       if (!validateObjectId(userId)) {
         socket.emit('auth_error', { message: 'Invalid user ID' });
         return;
@@ -52,7 +51,7 @@ class ChatSocketService {
       // Store user connection
       this.activeUsers.set(userId, socket.id);
       socket.userId = userId;
-      socket.emit('authenticate', { userId: userId });
+      // socket.emit('authenticate', { userId: userId });
 
       // Update user online status
       await this.chatRepository.updateUserOnlineStatus(userId, true);
@@ -62,7 +61,7 @@ class ChatSocketService {
 
       console.log("recentChats ", recentChats)
       
-      socket.emit('authenticated', {
+      socket.emit('authenticate', {
         message: 'Welcome to Talk Sphere',
         recentChats,
         userId
@@ -673,7 +672,7 @@ class ChatSocketService {
       }
 
       await this.chatRepository.updateUserStatus(userId, status);
-      this.broadcastUserStatus(userId, status);
+      // this.broadcastUserStatus(userId, status);
 
     } catch (error) {
       console.error('❌ Update status error:', error);
@@ -700,7 +699,7 @@ class ChatSocketService {
 
         // Update user offline status
         await this.chatRepository.updateUserOnlineStatus(userId, false);
-        this.broadcastUserStatus(userId, 'offline');
+        // this.broadcastUserStatus(userId, 'offline');
 
         console.log(`🔴 User ${userId} disconnected`);
       }
