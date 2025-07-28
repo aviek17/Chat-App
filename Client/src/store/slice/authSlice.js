@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit'
 
 
 const initialState = {
@@ -9,18 +9,6 @@ const initialState = {
     authError: null,
 }
 
-
-export const loginUser = createAsyncThunk(
-    'auth/loginUser',
-    async (credentials, { rejectWithValue }) => {
-        try {
-            //   const response = await api.login(credentials);
-            //   return response.data; 
-        } catch (err) {
-            return rejectWithValue(err.response?.data?.message || err.message);
-        }
-    }
-);
 
 
 const authSlice = createSlice({
@@ -36,27 +24,10 @@ const authSlice = createSlice({
         setToken: (state, action) => {
             state.accessToken = action.payload;
             state.isAuthenticated = !!action.payload;
+            state.refreshToken = action.payload;
             localStorage.setItem("token", action.payload);
         }
 
-    },
-    extraReducers: (builder) => {
-        builder
-            .addCase(loginUser.pending, (state) => {
-                state.authLoading = true;
-                state.authError = null;
-            })
-            .addCase(loginUser.fulfilled, (state, action) => {
-                state.authLoading = false;
-                state.accessToken = action.payload.accessToken;
-                state.refreshToken = action.payload.refreshToken;
-                state.isAuthenticated = true;
-                localStorage.setItem("token", action.payload.accessToken);
-            })
-            .addCase(loginUser.rejected, (state, action) => {
-                state.authLoading = false;
-                state.authError = action.payload || "Login failed";
-            });
     }
 })
 
