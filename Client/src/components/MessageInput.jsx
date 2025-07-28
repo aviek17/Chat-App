@@ -59,8 +59,6 @@ const MessageInput = ({ onSendMessage, theme, colors }) => {
 
   const handleTextareaChange = (e) => {
     setMessage(e.target.value);
-    
-    // Auto-resize textarea
     if (textareaRef.current) {
       textareaRef.current.style.height = '20px';
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
@@ -68,17 +66,13 @@ const MessageInput = ({ onSendMessage, theme, colors }) => {
   };
 
   const handleAttachment = () => {
-    // Close emoji picker if open
     closeEmojiPicker();
-    // In a real app, this would open file picker
     console.log('Open file picker');
   };
 
   const handleMicClick = () => {
     setIsRecording(!isRecording);
-    // Close emoji picker if open
     closeEmojiPicker();
-    // In a real app, this would start/stop voice recording
     console.log('Toggle voice recording');
   };
 
@@ -90,7 +84,6 @@ const MessageInput = ({ onSendMessage, theme, colors }) => {
         borderColor: theme === 'light' ? '#e0e0e0' : '#383838'
       }}
     >
-      {/* Emoji Picker Component */}
       <EmojiPickerComponent
         isOpen={isEmojiPickerOpen}
         onClose={closeEmojiPicker}

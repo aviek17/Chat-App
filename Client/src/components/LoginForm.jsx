@@ -7,10 +7,23 @@ import ChatLoginSVG from './ChatLoginSVG.jsx';
 import { colors } from '../styles/theme.js';
 import Logo from '../assets/Logo_Nobg.png'; // Assuming you have a logo image in your assets folder
 import LeftSectionImage from "../assets/Designer.svg"
+import { useNavigate } from 'react-router-dom';
+import { login } from '../services/user.service.js';
+import { useDispatch } from 'react-redux';
+import { setToken } from '../store/slice/authSlice.js';
+import ErrorModal from './ErrorModal.jsx';
+import { AuthEvents } from '../sockets/events/auth.js';
+import { setUserInfo } from '../store/slice/userInfoSlice.js';
 const LoginForm = () => {
+    const nav = useNavigate();
+    const dispatch = useDispatch();
     const [isDark, setIsDark] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [error, setError] = useState({
+        open: false,
+        message: ''
+    });
 
     // Form states
     const [formData, setFormData] = useState({
@@ -21,14 +34,12 @@ const LoginForm = () => {
     const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
 
-    // Handle form input changes
     const handleInputChange = (field, value) => {
         setFormData(prev => ({
             ...prev,
             [field]: value
         }));
 
-        // Clear error when user starts typing
         if (errors[field]) {
             setErrors(prev => ({
                 ...prev,
@@ -37,7 +48,7 @@ const LoginForm = () => {
         }
     };
 
-    // Basic form validation
+
     const validateForm = () => {
         const newErrors = {};
 
@@ -56,7 +67,15 @@ const LoginForm = () => {
         return newErrors;
     };
 
-    // Handle form submission
+    const showError = (message) => {
+        setError({ open: true, message });
+    };
+
+    const hideError = () => {
+        setError({ open: false, message: '' });
+    };
+
+
     const handleSubmit = async () => {
         const newErrors = validateForm();
 
@@ -68,19 +87,17 @@ const LoginForm = () => {
         setIsLoading(true);
 
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000));
 
-            // Simulate success
-            console.log('Login successful', {
-                email: formData.email,
-                timestamp: new Date().toISOString()
-            });
-
-            setShowSuccessModal(true);
+            const response = await login(formData);
+            if(response.token){
+                dispatch(setUserInfo(response.user));
+                dispatch(setToken(response.token));
+                setShowSuccessModal(true);
+            }            
 
         } catch (error) {
             console.error('Authentication error:', error);
+            showError(`Authentication error:  ${error.message}`);
             setErrors({ general: 'An error occurred. Please try again.' });
         } finally {
             setIsLoading(false);
@@ -102,7 +119,6 @@ const LoginForm = () => {
     // Handle modal close
     const handleModalClose = () => {
         setShowSuccessModal(false);
-        // Reset form after successful submission
         setFormData({ email: '', password: '' });
         setErrors({});
     };
@@ -150,7 +166,7 @@ const LoginForm = () => {
                 <div className="w-full max-w-md">
                     {/* Logo */}
                     <div className="text-center mb-8">
-                        
+
                         <div className="mb-2 flex  justify-center">
                             <img
                                 src={Logo}
@@ -259,8 +275,7 @@ const LoginForm = () => {
                         <button
                             type="button"
                             onClick={() => {
-                                // Navigate to register page
-                                //window.location.href = '/register';
+                                nav("/register")
                             }}
                             className="font-semibold transition-colors duration-300 hover:underline"
                             style={{ color: colors.primary.main }}
@@ -277,6 +292,17 @@ const LoginForm = () => {
                 onClose={handleModalClose}
                 isLogin={true}
                 userEmail={formData.email}
+            />
+
+            <ErrorModal
+                open={error.open}
+                onClose={hideError}
+                message={error.message}
+                isDarkMode={isDark}
+                title="Error"
+                showIcon={true}
+                confirmText="OK"
+                showCloseButton={true}
             />
         </div>
     );

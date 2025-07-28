@@ -2,13 +2,18 @@ import React, { useState } from 'react';
 import { Sun, Moon, MessageCircle, Mail, Lock, ArrowRight } from 'lucide-react';
 import InputField from './InputField';
 import SuccessModal from './SuccessModal';
-import ChatRegisterSVG from './ChatRegisterSVG';
+import LeftSectionImage from "../assets/Designer.svg"
 import { colors } from '../styles/theme.js';
-import Logo from "../assets/Logo_Nobg.png"; 
+import Logo from "../assets/Logo_Nobg.png";
 import { useNavigate } from 'react-router-dom';
+import ErrorModal from './ErrorModal.jsx';
+import { signup } from '../services/user.service.js';
+import { useDispatch } from 'react-redux';
+import { setToken } from '../store/slice/authSlice.js';
 
 
 const RegisterForm = () => {
+    const dispatch = useDispatch();
     const [isDark, setIsDark] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -22,18 +27,19 @@ const RegisterForm = () => {
         password: '',
         confirmPassword: ''
     });
-
+    const [error, setError] = useState({
+        open: false,
+        message: ''
+    });
     const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
 
-    // Handle form input changes
     const handleInputChange = (field, value) => {
         setFormData(prev => ({
             ...prev,
             [field]: value
         }));
 
-        // Clear error when user starts typing
         if (errors[field]) {
             setErrors(prev => ({
                 ...prev,
@@ -42,7 +48,14 @@ const RegisterForm = () => {
         }
     };
 
-    // Basic form validation
+    const showError = (message) => {
+        setError({ open: true, message });
+    };
+
+    const hideError = () => {
+        setError({ open: false, message: '' });
+    };
+
     const validateForm = () => {
         const newErrors = {};
 
@@ -67,7 +80,6 @@ const RegisterForm = () => {
         return newErrors;
     };
 
-    // Handle form submission
     const handleSubmit = async () => {
         const newErrors = validateForm();
 
@@ -79,32 +91,24 @@ const RegisterForm = () => {
         setIsLoading(true);
 
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            // Simulate success
-            console.log('Registration successful', {
-                email: formData.email,
-                timestamp: new Date().toISOString()
-            });
-
-            setShowSuccessModal(true);
-            navigate("/profile")
+            const response = await signup(formData);
+            if (response.token) {
+                dispatch(setToken(response.token));
+                setShowSuccessModal(true);
+            }
 
         } catch (error) {
-            console.error('Authentication error:', error);
+             console.error('Authentication error:', error);
+            showError(`Authentication error:  ${error.message}`);
             setErrors({ general: 'An error occurred. Please try again.' });
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Handle modal close
     const handleModalClose = () => {
         setShowSuccessModal(false);
-        // Reset form after successful submission
-        setFormData({ email: '', password: '', confirmPassword: '' });
-        setErrors({});
+        navigate("/");
     };
 
     return (
@@ -140,7 +144,8 @@ const RegisterForm = () => {
                     }}
                 />
                 <div className="relative z-10 w-full max-w-lg">
-                    <ChatRegisterSVG isDark={isDark} />
+                    {/* <ChatRegisterSVG isDark={isDark} /> */}
+                    <img src={LeftSectionImage} alt="" />
                 </div>
             </div>
 
@@ -275,6 +280,17 @@ const RegisterForm = () => {
                 onClose={handleModalClose}
                 isLogin={false}
                 userEmail={formData.email}
+            />
+
+            <ErrorModal
+                open={error.open}
+                onClose={hideError}
+                message={error.message}
+                isDarkMode={isDark}
+                title="Error"
+                showIcon={true}
+                confirmText="OK"
+                showCloseButton={true}
             />
         </div>
     );
