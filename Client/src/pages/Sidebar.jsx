@@ -7,14 +7,19 @@ import Favorite from "../BoxIcons/FavouriteIcon";
 import DonutLargeRoundedIcon from "../BoxIcons/DonutLargeRoundedIcon";
 import AccountCircleOutlinedIcon from "../BoxIcons/AccountCircleOutlinedIcon";
 import ExitToAppIcon from '../BoxIcons/ExitToApplication';
-import { Divider } from '@mui/material';
+import { Divider, Modal } from '@mui/material';
 import { useDispatch } from 'react-redux';
 import { toggleMenuState } from '../store/slice/menuDrawerSlice';
 import MenuDrawer from '../components/MenuDrawer';
 import { logout } from '../store/slice/authSlice';
+import { useState } from 'react';
+import Profile from './Profile';
 
 
 const Sidebar = () => {
+
+    const [profileModalOpen, setProfileModalOpen] = useState(false);
+
     const dispatch = useDispatch();
     const topGroupIcons = [{
         icon: MenuIcon,
@@ -23,35 +28,35 @@ const Sidebar = () => {
     const topFunctionalitiesGroupIcon = [
         {
             icon: Chat,
-            onClick: () => () => {console.log("clicked chat");}
+            onClick: ()  => { console.log("clicked chat"); }
         },
         {
             icon: DonutLargeRoundedIcon,
-            onClick: () => () => {console.log("clicked status");}
+            onClick: ()  => { console.log("clicked status"); }
         },
     ];
     const bottomChatGroupIcons = [
         {
             icon: Archive,
-            onClick: () => () => {console.log("clicked archive chat");}
+            onClick: ()  => { console.log("clicked archive chat"); }
         },
         {
             icon: Favorite,
-            onClick: () => () => {console.log("clicked favorite");}
+            onClick: ()  => { console.log("clicked favorite"); }
         }
     ];
     const bottomFunctionGroupIcons = [
         {
             icon: AccountCircleOutlinedIcon,
-            onClick: () => () => {console.log("clicked profile");}
+            onClick: () => { setProfileModalOpen(true); }
         },
         {
             icon: Setting,
-            onClick: () => () => {console.log("clicked setting");}
+            onClick: () =>  { console.log("clicked setting"); }
         },
         {
             icon: ExitToAppIcon,
-            onClick: () => {dispatch(logout()); console.log("clicked logout");}
+            onClick: () => { dispatch(logout()); console.log("clicked logout"); }
         }
     ];
 
@@ -72,6 +77,16 @@ const Sidebar = () => {
             </div>
 
             <MenuDrawer />
+
+
+            <Modal
+                open={profileModalOpen}
+                onClose={() => { setProfileModalOpen(false); }}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                <Profile />
+            </Modal>
 
         </>
     )

@@ -119,45 +119,9 @@ const Profile = () => {
 
     return (
         <div
-            className="min-h-screen transition-all duration-300"
+            className=" transition-all duration-300"
             style={{ backgroundColor: bgColors.primary }}
         >
-            {/* Header */}
-            <div
-                className="border-b transition-all duration-300"
-                style={{
-                    backgroundColor: bgColors.paper,
-                    borderColor: isDarkMode ? '#34495e' : '#d1d5db'
-                }}
-            >
-                <div className="max-w-6xl mx-auto px-4 py-6">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                            <div className="flex items-center space-x-3">
-                                <div className="text-2xl font-bold" style={{ color: colors.primary.main }}>
-                                    TalkSphere
-                                </div>
-                                <div className="text-xs uppercase tracking-wider" style={{ color: textColors.secondary }}>
-                                    LET'S TALK
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Theme Toggle */}
-                        <button
-                            onClick={() => setIsDarkMode(!isDarkMode)}
-                            className="p-2 rounded-full transition-all duration-300 hover:scale-105"
-                            style={{
-                                backgroundColor: isDarkMode ? '#34495e' : '#f1f5f9',
-                                color: textColors.primary
-                            }}
-                        >
-                            {isDarkMode ? '🌙' : '☀️'}
-                        </button>
-                    </div>
-                </div>
-            </div>
-
             {/* Main Content */}
             <div className="max-w-6xl mx-auto px-4 py-8">
                 {/* Page Title */}

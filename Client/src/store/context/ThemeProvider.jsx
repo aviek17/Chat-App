@@ -3,11 +3,11 @@ import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { getTheme } from '../../styles/theme';
 import { initializeTheme, setSystemPreference } from '../slice/themeSlice';
-import { useAppDispatch, useAppSelector } from '../hooks';
+import { useDispatch, useSelector } from 'react-redux';
 
 export const ThemeProvider = ({ children }) => {
-  const dispatch = useAppDispatch();
-  const { isDarkMode, themeMode } = useAppSelector((state) => state.theme);
+  const dispatch = useDispatch();
+  const { isDarkMode, themeMode } = useSelector((state) => state.theme || "light");
   
   // Initialize theme on mount
   useEffect(() => {
