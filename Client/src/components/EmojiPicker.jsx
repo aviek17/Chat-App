@@ -37,7 +37,7 @@ const EmojiPickerComponent = ({
 
   if (!isOpen) return null;
 
-  const getPositionClasses = () => {
+  const getPositionClasses = (position) => {
     switch (position) {
       case 'bottom-left':
         return 'bottom-full mb-2 left-4';
@@ -70,7 +70,7 @@ const EmojiPickerComponent = ({
   return (
     <div 
       ref={pickerRef}
-      className={`absolute z-50 ${getPositionClasses()}`}
+      className={`absolute z-50 ${getPositionClasses('bottom-left')}`}
       style={pickerStyle}
     >
       <EmojiPicker
