@@ -77,6 +77,10 @@ class ChatSocketController {
     }
   }
 
+  async handleAllChats(socket){
+    
+  }
+
   async handleSendMessageWithAttachment(socket, data) {
     try {
       await this.chatSocketService.handleSendMessageWithAttachment(socket, data);

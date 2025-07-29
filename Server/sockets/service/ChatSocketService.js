@@ -19,8 +19,6 @@ class ChatSocketService {
     // Import and use controller
     const ChatSocketController = require('../controllers/ChatSocketController');
     const controller = new ChatSocketController(this);
-    
-    // Let controller handle all event bindings
     controller.initializeEventHandlers(socket);
   }
   
@@ -58,8 +56,6 @@ class ChatSocketService {
 
       // Get and send recent chats
       const recentChats = await ChatService.getRecentChats(userId);
-
-      console.log("recentChats ", recentChats)
       
       socket.emit('authenticate', {
         message: 'Welcome to Talk Sphere',

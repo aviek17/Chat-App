@@ -236,43 +236,50 @@ class ChatRepository {
                         as: 'userInfo'
                     }
                 },
-                {
-                    $lookup: {
-                        from: 'messageattachments',
-                        localField: 'lastMessage.attachment',
-                        foreignField: '_id',
-                        as: 'lastMessage.attachmentInfo'
-                    }
-                },
+                // {
+                //     $lookup: {
+                //         from: 'messageattachments',
+                //         localField: 'lastMessage.attachment',
+                //         foreignField: '_id',
+                //         as: 'lastMessage.attachmentInfo'
+                //     }
+                // },
                 {
                     $unwind: '$userInfo'
                 },
-                {
-                    $addFields: {
-                        'lastMessage.attachmentInfo': {
-                            $arrayElemAt: ['$lastMessage.attachmentInfo', 0]
-                        }
-                    }
-                },
+                // {
+                //     $addFields: {
+                //         'lastMessage.attachmentInfo': {
+                //             $arrayElemAt: ['$lastMessage.attachmentInfo', 0]
+                //         }
+                //     }
+                // },
                 {
                     $project: {
-                        _id: 1,
-                        lastMessage: 1,
+                        chatPartnerId: '$_id',
+                        chatPartner: {
+                            _id: '$userInfo._id',
+                            name: '$userInfo.name',
+                            email: '$userInfo.email',
+                            avatar: '$userInfo.avatar',
+                            isOnline: '$userInfo.isOnline'
+                        },
+                        lastMessage: {
+                            _id: '$lastMessage._id',
+                            encryptedContent: '$lastMessage.encryptedContent',
+                            iv: '$lastMessage.iv',
+                            status: '$lastMessage.status',
+                            createdAt: '$lastMessage.createdAt',
+                            isSentByMe: '$lastMessage.isSentByCurrentUser',
+                            hasAttachment: { $ne: ['$lastMessage.attachment', null] }
+                        },
                         unreadCount: 1,
-                        userInfo: {
-                            _id: 1,
-                            username: 1,
-                            avatar: 1,
-                            isOnline: 1,
-                            lastSeen: 1
-                        }
+                        totalMessages: 1,
+                        lastActivity: 1
                     }
                 },
                 {
-                    $sort: { 'lastMessage.createdAt': -1 }
-                },
-                {
-                    $limit: limit
+                    $sort: { lastActivity: -1 }
                 }
             ]);
 
