@@ -68,7 +68,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #cccccc;
+    background: #797878;
     border-radius: 10px;
     transition: background-color 0.2s ease;
 }
