@@ -46,14 +46,7 @@ const io = new Server(server, {
     credentials: true
   }
 });
-//io.use(socketAuthMiddleware);
-// Add this debug logging
-io.engine.on("connection_error", (err) => {
-  logger.error("Socket.IO connection error:", err.req);
-  logger.error("Error code:", err.code);
-  logger.error("Error message:", err.message);
-  logger.error("Error context:", err.context);
-});
+// io.use(socketAuthMiddleware);
 
 logger.success(" Socket.IO server initialized");
 socketHandler(io);

@@ -1,48 +1,65 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useState, useEffect } from 'react';
 import socketManager from '../SocketManager';
 
-export const useSocket = (serverUrl = import.meta.env.VITE_CHAT_APP_HOST, options = {}) => {
-    const socketRef = useRef(null);
-    const [isConnected, setIsConnected] = useState(false);
+export const useSocket = () => {
+  const [isConnected, setIsConnected] = useState(false);
+  const [socket, setSocket] = useState(null);
+  const [connectionError, setConnectionError] = useState(null);
 
-    useEffect(() => {
-        socketRef.current = socketManager.connect(serverUrl, options);
-
-        const handleConnect = () => {
-            setIsConnected(true);
-        };
-
-        const handleDisconnect = () => {
-            setIsConnected(false);
-        };
-
-        socketManager.on('connect', handleConnect);
-        socketManager.on('disconnect', handleDisconnect);
-
-        return () => {
-            socketManager.off('connect', handleConnect);
-            socketManager.off('disconnect', handleDisconnect);
-            socketManager.disconnect();
-        };
-    }, [serverUrl]);
-
-    const emit = useCallback((event, data) => {
-        socketManager.emit(event, data);
-    }, []);
-
-    const on = useCallback((event, handler) => {
-        socketManager.on(event, handler);
-    }, []);
-
-    const off = useCallback((event, handler) => {
-        socketManager.off(event, handler);
-    }, []);
-
-    return {
-        socket: socketRef.current,
-        isConnected,
-        emit,
-        on,
-        off
+  useEffect(() => {
+    
+    const initializeSocket = async () => {
+      try {
+        const socketInstance = await socketManager.connect();
+        setSocket(socketInstance);
+        setIsConnected(true);
+        setConnectionError(null);
+      } catch (error) {
+        setConnectionError(error);
+        setIsConnected(false);
+      }
     };
+
+    initializeSocket();
+
+    // Set up listeners for connection state changes
+    const handleConnect = () => {
+      setIsConnected(true);
+      setConnectionError(null);
+    };
+
+    const handleDisconnect = () => {
+      setIsConnected(false);
+    };
+
+    const handleError = (error) => {
+      setConnectionError(error);
+    };
+
+    // Add listeners if socket exists
+    const currentSocket = socketManager.getSocket();
+    if (currentSocket) {
+      currentSocket.on('connect', handleConnect);
+      currentSocket.on('disconnect', handleDisconnect);
+      currentSocket.on('error', handleError);
+    }
+
+    // Cleanup
+    return () => {
+      const currentSocket = socketManager.getSocket();
+      if (currentSocket) {
+        currentSocket.off('connect', handleConnect);
+        currentSocket.off('disconnect', handleDisconnect);
+        currentSocket.off('error', handleError);
+      }
+    };
+  }, []);
+
+  return {
+    isConnected,
+    socket,
+    connectionError,
+    socketManager,
+    getDebugInfo: () => socketManager.getConnectionState()
+  };
 };
