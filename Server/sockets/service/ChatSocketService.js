@@ -93,18 +93,25 @@ class ChatSocketService {
       // Validate message content using ChatService method
       const validatedContent = validateMessageContent(content);
 
+      if(!validatedContent){
+        socket.emit('error', { message: 'Invalid message content' });
+        return;
+      }
+
       // Create message using ChatService
-      const message = await ChatService.createMessage(senderId, receiverId, validatedContent);
+      const message = await ChatService.createMessage(senderId, receiverId, content);
 
       // Emit to sender (confirmation)
-      socket.emit('message_sent', { message });
+      socket.emit('message_sent', { message : message.content });
 
-      // Emit to receiver if online
+
       const receiverSocketId = this.activeUsers.get(receiverId);
+      console.log(receiverSocketId)
       if (receiverSocketId) {
-        this.io.to(receiverSocketId).emit('message_received', { message });
-        
-        // Auto-mark as delivered since receiver is online
+        console.log("Message sent to receiver:",receiverId,  message.content);
+        this.io.to(receiverSocketId).emit('message_received', { message : message.content });
+        this.io.to(receiverId).emit('message_received', { message : message.content });
+        console.log(`Message sent to receiver ${receiverSocketId}:`, message.content);
         await ChatService.markMessagesAsDelivered(senderId, receiverId);
         socket.emit('message_delivered', { 
           messageId: message._id, 
