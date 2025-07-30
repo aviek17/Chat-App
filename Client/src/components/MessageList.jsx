@@ -1,11 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import MessageBubble from './MessageBubble';
+import { MessageEvents } from '../sockets/events/message';
+import { useSocket } from '../sockets/hooks/useSocket';
 
-const MessageList = ({ messages, theme, colors }) => {
+const MessageList = ({ messages, theme, colors, onNewMessage }) => {
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef(null);
+
+  const { isConnected } = useSocket();
 
   const currentColors = {
     background: colors.background[theme],
@@ -23,25 +27,67 @@ const MessageList = ({ messages, theme, colors }) => {
 
   const handleScroll = () => {
     setIsScrolling(true);
-    
+
     // Clear existing timeout
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
-    
+
     // Hide scrollbar after 1 second of no scrolling
     scrollTimeoutRef.current = setTimeout(() => {
       setIsScrolling(false);
     }, 1000);
   };
 
+  // Create stable reference for the socket event handler
+  const handleNewMessage = useCallback((message) => {
+    console.log('🔔 MessageList: Received new message:', message);
+
+    // Call the parent's handler
+    if (onNewMessage) {
+      console.log('📤 MessageList: Calling parent onNewMessage handler');
+      alert(`New message: ${message.message}`);
+      onNewMessage(message);
+    } else {
+      console.warn('⚠️ MessageList: No onNewMessage handler provided by parent');
+    }
+  }, [onNewMessage]);
+
+  // Register socket event listener with better debugging
   useEffect(() => {
+    console.log('🔄 MessageList useEffect triggered:', {
+      isConnected,
+      hasOnNewMessage: !!onNewMessage,
+      handleNewMessageRef: !!handleNewMessage
+    });
+
+    if (!isConnected) {
+      console.log('❌ Socket not connected, skipping event registration');
+      return;
+    }
+
+    console.log('✅ Registering message listener');
+    MessageEvents.onNewMessage(handleNewMessage);
+
+    // Test the socket connection
+    console.log('🧪 Testing socket emit...');
+    // You can comment this out after testing
+    // socketManager.emit('test_event', { test: 'data' });
+
+    // Cleanup function - use the specific handler removal
     return () => {
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
+      console.log('🧹 Cleaning up message listener');
+      MessageEvents.offNewMessage(handleNewMessage);
     };
-  }, []);
+  }, [isConnected, handleNewMessage]);
+
+  // Additional debugging effect to monitor socket state
+  useEffect(() => {
+    console.log('🔍 MessageList: Socket state changed:', {
+      isConnected,
+      socketId: window.socketManager?.socket?.id || 'no socket'
+    });
+  }, [isConnected]);
 
   const formatMessageDate = (timestamp) => {
     const messageDate = new Date(timestamp);
@@ -73,13 +119,13 @@ const MessageList = ({ messages, theme, colors }) => {
   const groupedMessages = groupMessagesByDate(messages);
 
   return (
-    <div 
+    <div
       ref={messagesContainerRef}
       className={`overflow-y-auto p-4 h-[calc(100vh-180px)]
       }`}
-      style={{ 
+      style={{
         backgroundColor: currentColors.background.secondary,
-        backgroundImage: theme === 'light' 
+        backgroundImage: theme === 'light'
           ? 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23f0f0f0" fill-opacity="0.3"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
           : 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23333333" fill-opacity="0.1"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
       }}
@@ -89,7 +135,7 @@ const MessageList = ({ messages, theme, colors }) => {
         <div key={date} className="mb-6">
           {/* Date separator */}
           <div className="flex justify-center mb-4">
-            <div 
+            <div
               className="px-3 py-1 rounded-lg text-xs font-medium"
               style={{
                 backgroundColor: currentColors.background.elevated,
@@ -99,19 +145,19 @@ const MessageList = ({ messages, theme, colors }) => {
               {date}
             </div>
           </div>
-          
+
           {/* Messages for this date */}
           {dateMessages.map((message, index) => (
-            <MessageBubble 
-              key={message.id || index} 
-              message={message} 
-              theme={theme} 
-              colors={colors} 
+            <MessageBubble
+              key={message.id || index}
+              message={message}
+              theme={theme}
+              colors={colors}
             />
           ))}
         </div>
       ))}
-      
+
       <div ref={messagesEndRef} />
     </div>
   );

@@ -2,13 +2,15 @@ import React, { useState, useRef } from 'react';
 import { Send, Paperclip, Smile, Mic } from 'lucide-react';
 import EmojiPickerComponent from './EmojiPicker';
 import { useEmojiPicker } from '../hooks/useEmojiPicker';
+import { useSelector } from 'react-redux';
+import { MessageEvents } from '../sockets/events/message';
 
 const MessageInput = ({ onSendMessage, theme, colors }) => {
   const [message, setMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef(null);
+  const userInfo = useSelector(state => state?.user?.userInfo);
 
-  // Use the emoji picker hook
   const {
     isOpen: isEmojiPickerOpen,
     togglePicker: toggleEmojiPicker,
@@ -33,15 +35,18 @@ const MessageInput = ({ onSendMessage, theme, colors }) => {
   };
 
   const handleSubmit = (e) => {
+    console.log("handleSubmit called");
     e.preventDefault();
     if (message.trim()) {
-      onSendMessage({
-        type: 'text',
-        content: message.trim(),
-        timestamp: new Date().toISOString(),
-        sender: 'user',
-        status: 'sent'
-      });
+      // onSendMessage({
+      //   type: 'text',
+      //   content: message.trim(),
+      //   timestamp: new Date().toISOString(),
+      //   sender: 'user',
+      //   status: 'sent'
+      // });
+      console.log("new msg ", message.trim());
+      onMessageSend(message.trim());
       setMessage('');
       closeEmojiPicker(); // Close emoji picker on send
       if (textareaRef.current) {
@@ -49,6 +54,21 @@ const MessageInput = ({ onSendMessage, theme, colors }) => {
       }
     }
   };
+
+
+  const onMessageSend = (msg) => {
+    console.log(userInfo);
+    // const socketData = { userId: userInfo?.id };
+    const messageContent = { receiverId: "6883caa351d31417050b05cd", content: msg };
+
+    const handleMessageSentSuccessfully = (data) => {
+      console.log("Message sent success:", data.message);
+    };
+    MessageEvents.onMessageSent(handleMessageSentSuccessfully);
+
+    MessageEvents.sendMessage(messageContent);
+
+  }
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -77,9 +97,9 @@ const MessageInput = ({ onSendMessage, theme, colors }) => {
   };
 
   return (
-    <div 
+    <div
       className="p-4 border-t relative"
-      style={{ 
+      style={{
         backgroundColor: currentColors.background.primary,
         borderColor: theme === 'light' ? '#e0e0e0' : '#383838'
       }}
@@ -93,7 +113,8 @@ const MessageInput = ({ onSendMessage, theme, colors }) => {
         position="bottom-right"
       />
 
-      <form onSubmit={handleSubmit} className="flex space-x-3 items-center">
+      <form className="flex space-x-3 items-center">
+       {/* onSubmit={handleSubmit} */}
         <button
           type="button"
           onClick={handleAttachment}
@@ -116,9 +137,8 @@ const MessageInput = ({ onSendMessage, theme, colors }) => {
           <button
             type="button"
             onClick={toggleEmojiPicker}
-           className={`absolute left-3 top-2 p-1 rounded-full transition-colors ${
-              isEmojiPickerOpen ? 'opacity-100' : 'opacity-70'
-            }`}
+            className={`absolute left-3 top-2 p-1 rounded-full transition-colors ${isEmojiPickerOpen ? 'opacity-100' : 'opacity-70'
+              }`}
             style={{
               backgroundColor: isEmojiPickerOpen ? currentColors.background.elevated : 'transparent',
               ':hover': { backgroundColor: currentColors.background.elevated }
@@ -156,6 +176,7 @@ const MessageInput = ({ onSendMessage, theme, colors }) => {
               backgroundColor: colors.primary.main,
               color: colors.primary.contrastText
             }}
+            onClick={handleSubmit}
           >
             <Send size={20} />
           </button>
@@ -163,9 +184,8 @@ const MessageInput = ({ onSendMessage, theme, colors }) => {
           <button
             type="button"
             onClick={handleMicClick}
-            className={`p-2 rounded-full transition-colors flex-shrink-0 ${
-              isRecording ? 'animate-pulse' : ''
-            }`}
+            className={`p-2 rounded-full transition-colors flex-shrink-0 ${isRecording ? 'animate-pulse' : ''
+              }`}
             style={{
               backgroundColor: isRecording ? '#ff4444' : colors.primary.main,
               color: colors.primary.contrastText
