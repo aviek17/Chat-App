@@ -8,16 +8,12 @@ class ChatService {
       const messageData = {
         sender: senderId,
         receiver: receiverId,
-        status: 'sent'
+        status: 'sent', 
+        content
       };
 
       const message = await ChatRepository.createMessage(messageData);
-      
-      // Encrypt and set content
-      message.setContent(content);
-      await message.save();
-      
-      // Get populated message
+
       const populatedMessage = await ChatRepository.getMessageById(message._id, [
         { path: 'sender', select: 'username' },
         { path: 'receiver', select: 'username' }

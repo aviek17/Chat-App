@@ -7,8 +7,19 @@ class ChatRepository {
 
     // Create a new message
     async createMessage(messageData) {
+        const { content } = messageData;
+        const {
+            sender,
+            receiver,
+            status
+        } = messageData;
         try {
-            const message = new Message(messageData);
+            const message = new Message({
+                sender,
+                receiver,
+                status
+            });
+            message.setContent(content);
             await message.save();
             return message;
         } catch (error) {
