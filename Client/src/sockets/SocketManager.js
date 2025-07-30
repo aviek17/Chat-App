@@ -5,55 +5,110 @@ class SocketManager {
     this.socket = null;
     this.isConnected = false;
     this.eventHandlers = new Map();
+    this.connectionPromise = null;
   }
 
   connect(serverUrl = import.meta.env.VITE_CHAT_APP_HOST, options = {}) {
+    console.log('🔌 SocketManager: Attempting to connect to:', serverUrl);
+
+    // If already connecting, return the existing promise
+    if (this.connectionPromise) {
+      return this.connectionPromise;
+    }
+
+    // If already connected, return the existing socket
+    if (this.socket && this.socket.connected) {
+      return Promise.resolve(this.socket);
+    }
+
+    // Clean up any existing socket
     if (this.socket) {
       this.disconnect();
     }
 
-    this.socket = io(serverUrl, {
-      autoConnect: false,
-      path: import.meta.env.VITE_CHAT_APP_SOCKET_PATH,
-      transports: ['polling', 'websocket'],
-      ...options
+    this.connectionPromise = new Promise((resolve, reject) => {
+      this.socket = io(serverUrl, {
+        autoConnect: true, 
+        path: import.meta.env.VITE_CHAT_APP_SOCKET_PATH || '/socket.io/',
+        transports: ['websocket', 'polling'],
+        timeout: 20000,
+        ...options
+      });
+
+      this.setupConnectionListeners(resolve, reject);
     });
 
-    this.setupConnectionListeners();
-    this.socket.connect();
+    // Make socket available globally for debugging
+    window.socketManager = this;
+    window.socket = this.socket;
 
-    return this.socket;
+    return this.connectionPromise;
   }
 
-  setupConnectionListeners() {
+  setupConnectionListeners(resolve, reject) {
+    const connectTimeout = setTimeout(() => {
+      console.error('❌ Connection timeout');
+      reject(new Error('Connection timeout'));
+    }, 20000);
+
     this.socket.on('connect', () => {
-      console.log('Socket connected:', this.socket.id);
+      clearTimeout(connectTimeout);
+      console.log('✅ Socket connected successfully:', this.socket.id);
       this.isConnected = true;
+      this.connectionPromise = null; // Reset promise
+      resolve(this.socket);
+    });
+
+    this.socket.on('connect_error', (error) => {
+      clearTimeout(connectTimeout);
+      console.error('💥 Connection error:', error);
+      this.isConnected = false;
+      this.connectionPromise = null;
+      reject(error);
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason);
+      console.log('❌ Socket disconnected:', reason);
       this.isConnected = false;
+
+      // Auto-reconnect for certain disconnect reasons
+      if (reason === 'io server disconnect') {
+        console.log('🔄 Server disconnected us, attempting to reconnect...');
+        setTimeout(() => this.connect(), 1000);
+      }
     });
 
     this.socket.on('error', (error) => {
-      console.error('Socket error:', error);
+      console.error('💥 Socket error:', error);
+    });
+
+    // Test event for debugging
+    this.socket.on('test_response', (data) => {
+      console.log('🧪 Test response received:', data);
     });
   }
 
   on(event, handler) {
-    if (this.socket) {
-      this.socket.on(event, handler);
 
-      if (!this.eventHandlers.has(event)) {
-        this.eventHandlers.set(event, []);
-      }
-      this.eventHandlers.get(event).push(handler);
+    if (!this.socket) {
+      return;
     }
+
+    this.socket.on(event, handler);
+
+    if (!this.eventHandlers.has(event)) {
+      this.eventHandlers.set(event, []);
+    }
+    this.eventHandlers.get(event).push(handler);
   }
 
   off(event, handler) {
-    if (this.socket) {
+
+    if (!this.socket) {
+      return;
+    }
+
+    if (handler) {
       this.socket.off(event, handler);
 
       if (this.eventHandlers.has(event)) {
@@ -63,21 +118,27 @@ class SocketManager {
           handlers.splice(index, 1);
         }
       }
+    } else {
+      this.socket.off(event);
+      this.eventHandlers.delete(event);
     }
   }
 
   emit(event, data) {
-    console.log(data)
-    if (this.socket && this.isConnected) {
-      console.log(`Emitting event: ${event}`, data);
-      this.socket.emit(event, data);
-    } else {
-      console.warn('Socket not connected. Cannot emit:', event);
+    if (!this.socket) {
+      return;
     }
+
+    if (!this.isConnected) {
+      return;
+    }
+
+    this.socket.emit(event, data);
   }
 
   disconnect() {
     if (this.socket) {
+      // Clean up event handlers
       this.eventHandlers.forEach((handlers, event) => {
         handlers.forEach(handler => {
           this.socket.off(event, handler);
@@ -88,6 +149,7 @@ class SocketManager {
       this.socket.disconnect();
       this.socket = null;
       this.isConnected = false;
+      this.connectionPromise = null;
     }
   }
 
@@ -96,7 +158,23 @@ class SocketManager {
   }
 
   isSocketConnected() {
-    return this.isConnected && this.socket?.connected;
+    return this.socket && this.socket.connected && this.isConnected;
+  }
+
+  // Debug methods
+  getConnectionState() {
+    return {
+      hasSocket: !!this.socket,
+      socketConnected: this.socket?.connected || false,
+      isConnectedFlag: this.isConnected,
+      socketId: this.socket?.id || 'no socket',
+      registeredEvents: Array.from(this.eventHandlers.keys())
+    };
+  }
+
+  listRegisteredEvents() {
+    const state = this.getConnectionState();
+    return state;
   }
 }
 

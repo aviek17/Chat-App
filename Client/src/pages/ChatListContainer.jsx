@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Search, User, Users, UserPlus, ListFilter, MessageCircleMore, Star, Archive } from 'lucide-react';
 import { colors } from '../styles/theme';
 import { useSelector } from 'react-redux';
