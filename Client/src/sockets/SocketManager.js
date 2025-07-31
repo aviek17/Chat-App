@@ -9,9 +9,6 @@ class SocketManager {
   }
 
   connect(serverUrl = import.meta.env.VITE_CHAT_APP_HOST, options = {}) {
-    console.log('🔌 SocketManager: Attempting to connect to:', serverUrl);
-
-    // If already connecting, return the existing promise
     if (this.connectionPromise) {
       return this.connectionPromise;
     }
@@ -47,13 +44,11 @@ class SocketManager {
 
   setupConnectionListeners(resolve, reject) {
     const connectTimeout = setTimeout(() => {
-      console.error('❌ Connection timeout');
       reject(new Error('Connection timeout'));
     }, 20000);
 
     this.socket.on('connect', () => {
       clearTimeout(connectTimeout);
-      console.log('✅ Socket connected successfully:', this.socket.id);
       this.isConnected = true;
       this.connectionPromise = null; // Reset promise
       resolve(this.socket);
@@ -61,35 +56,31 @@ class SocketManager {
 
     this.socket.on('connect_error', (error) => {
       clearTimeout(connectTimeout);
-      console.error('💥 Connection error:', error);
       this.isConnected = false;
       this.connectionPromise = null;
       reject(error);
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('❌ Socket disconnected:', reason);
       this.isConnected = false;
 
       // Auto-reconnect for certain disconnect reasons
       if (reason === 'io server disconnect') {
-        console.log('🔄 Server disconnected us, attempting to reconnect...');
         setTimeout(() => this.connect(), 1000);
       }
     });
 
     this.socket.on('error', (error) => {
-      console.error('💥 Socket error:', error);
+      console.error('Socket error:', error);
     });
 
     // Test event for debugging
     this.socket.on('test_response', (data) => {
-      console.log('🧪 Test response received:', data);
+      console.log('Test response received:', data);
     });
   }
 
   on(event, handler) {
-
     if (!this.socket) {
       return;
     }
