@@ -106,20 +106,18 @@ class ChatSocketService {
 
 
       const receiverSocketId = this.activeUsers.get(receiverId);
+
       console.log(receiverSocketId)
       if (receiverSocketId) {
-        console.log("Message sent to receiver:",receiverId,  message.content);
         this.io.to(receiverSocketId).emit('message_received', { message : message.content });
-        this.io.to(receiverId).emit('message_received', { message : message.content });
-        console.log(`Message sent to receiver ${receiverSocketId}:`, message.content);
         await ChatService.markMessagesAsDelivered(senderId, receiverId);
+        console.log(`Message delivered to ${receiverId}`);
         socket.emit('message_delivered', { 
           messageId: message._id, 
           receiverId 
         });
       }
 
-      // Update recent chats for both users
       this.updateRecentChats([senderId, receiverId]);
 
     } catch (error) {

@@ -37,6 +37,7 @@ export class MessageEvents {
 
     // Listen for incoming messages
     static onNewMessage(callback) {
+        console.log("🔄 Registering new message listener");
         socketManager.on('message_received', callback);
     }
 

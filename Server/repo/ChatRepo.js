@@ -2,6 +2,31 @@ const Message = require('../models/chats/PrivateChat/privateMessage');
 //const MessageAttachment = require('../models/MessageAttachment');
 const User = require('../models/User');
 const { ObjectId } = require('mongoose').Types;
+const crypto = require('crypto');
+
+
+const ENCRYPTION_KEY = Buffer.from(process.env.MESSAGE_ENCRYPTION_KEY, 'hex');
+const ALGORITHM = process.env.MESSAGE_ENCRYPTION_ALGO;
+
+// Helper function to decrypt message content
+function decryptContent(encryptedContent, iv) {
+    if (!encryptedContent || !iv) return null;
+    
+    try {
+        const ivBuffer = Buffer.from(iv, 'hex');
+        const decipher = crypto.createDecipheriv(ALGORITHM, ENCRYPTION_KEY, ivBuffer);
+        
+        let decrypted = decipher.update(encryptedContent, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        
+        return decrypted;
+    } catch (error) {
+        console.error('Decryption error:', error);
+        return null;
+    }
+}
+
+
 
 class ChatRepository {
 
@@ -294,7 +319,20 @@ class ChatRepository {
                 }
             ]);
 
-            return recentChats;
+            const decryptedChats = recentChats.map(chat => {
+                if (chat.lastMessage && chat.lastMessage.encryptedContent && chat.lastMessage.iv) {
+                    chat.lastMessage.content = decryptContent(
+                        chat.lastMessage.encryptedContent,
+                        chat.lastMessage.iv
+                    );
+                    // Remove encrypted fields from response for security
+                    delete chat.lastMessage.encryptedContent;
+                    delete chat.lastMessage.iv;
+                }
+                return chat;
+            });
+
+            return decryptedChats;
         } catch (error) {
             throw new Error(`Failed to get recent chats: ${error.message}`);
         }
