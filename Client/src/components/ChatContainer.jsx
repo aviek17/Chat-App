@@ -112,7 +112,8 @@ const ChatContainer = () => {
     };
 
      const handleNewMessage = useCallback((newMessage) => {
-        console.log('New message received in parent:', newMessage);        
+        console.log('New message received in parent:', newMessage); 
+        window.alert(`New message: ${newMessage.message}`);      
     }, []);
 
     if (!selectedChatId) {

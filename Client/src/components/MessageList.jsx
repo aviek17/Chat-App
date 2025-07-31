@@ -41,49 +41,37 @@ const MessageList = ({ messages, theme, colors, onNewMessage }) => {
 
   // Create stable reference for the socket event handler
   const handleNewMessage = useCallback((message) => {
-    console.log('🔔 MessageList: Received new message:', message);
 
     // Call the parent's handler
     if (onNewMessage) {
-      console.log('📤 MessageList: Calling parent onNewMessage handler');
-      alert(`New message: ${message.message}`);
       onNewMessage(message);
     } else {
-      console.warn('⚠️ MessageList: No onNewMessage handler provided by parent');
+      console.warn(' MessageList: No onNewMessage handler provided by parent');
     }
   }, [onNewMessage]);
 
   // Register socket event listener with better debugging
   useEffect(() => {
-    console.log('🔄 MessageList useEffect triggered:', {
+    console.log('MessageList useEffect triggered:', {
       isConnected,
       hasOnNewMessage: !!onNewMessage,
       handleNewMessageRef: !!handleNewMessage
     });
 
     if (!isConnected) {
-      console.log('❌ Socket not connected, skipping event registration');
       return;
     }
 
-    console.log('✅ Registering message listener');
     MessageEvents.onNewMessage(handleNewMessage);
 
-    // Test the socket connection
-    console.log('🧪 Testing socket emit...');
-    // You can comment this out after testing
-    // socketManager.emit('test_event', { test: 'data' });
-
-    // Cleanup function - use the specific handler removal
     return () => {
-      console.log('🧹 Cleaning up message listener');
       MessageEvents.offNewMessage(handleNewMessage);
     };
   }, [isConnected, handleNewMessage]);
 
   // Additional debugging effect to monitor socket state
   useEffect(() => {
-    console.log('🔍 MessageList: Socket state changed:', {
+    console.log('MessageList: Socket state changed:', {
       isConnected,
       socketId: window.socketManager?.socket?.id || 'no socket'
     });
