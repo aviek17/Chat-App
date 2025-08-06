@@ -11,6 +11,8 @@ const validateRequest = require('../middlewares/validator');
 //routing
 router.post('/sign-up', validateRequest(userRequestSchema), userController.signup);
 
-router.post("/login",  validateRequest(userRequestSchema), userController.login)
+router.post("/login",  validateRequest(userRequestSchema), userController.login);
+
+router.get("/vercel/status", (req, res)=> res.send("Vercel is up and running!"));
 
 module.exports = router;
