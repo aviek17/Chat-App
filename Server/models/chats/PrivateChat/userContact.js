@@ -10,6 +10,10 @@ const userContactSchema = new mongoose.Schema({
     contacts: [
         {
             user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+            userNickName : { 
+                firstName : { type: String, required: true, trim: true },
+                lastName : { type: String, required: true, trim: true }
+            },
             addedBy: {
                 source: {
                     type: String,
