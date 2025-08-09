@@ -13,12 +13,10 @@ class SocketManager {
       return this.connectionPromise;
     }
 
-    // If already connected, return the existing socket
     if (this.socket && this.socket.connected) {
       return Promise.resolve(this.socket);
     }
 
-    // Clean up any existing socket
     if (this.socket) {
       this.disconnect();
     }
@@ -29,17 +27,27 @@ class SocketManager {
         path: import.meta.env.VITE_CHAT_APP_SOCKET_PATH || '/socket.io/',
         transports: ['websocket', 'polling'],
         timeout: 20000,
+         auth: options.auth || {},
         ...options
       });
 
       this.setupConnectionListeners(resolve, reject);
     });
-
-    // Make socket available globally for debugging
+    
     window.socketManager = this;
     window.socket = this.socket;
 
     return this.connectionPromise;
+  }
+
+  connectWithToken(token, serverUrl = import.meta.env.VITE_CHAT_APP_HOST, options = {}) {
+    return this.connect(serverUrl, {
+      ...options,
+      auth: {
+        token,
+        ...options.auth
+      }
+    });
   }
 
   setupConnectionListeners(resolve, reject) {

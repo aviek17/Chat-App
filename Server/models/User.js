@@ -6,7 +6,7 @@ const UserSchema = new mongoose.Schema({
     email:          { type: String, required: true, unique: true, trim: true, },
     username:       { type: String, trim: true, },
     displayName:    { type: String, trim: true, },
-    phoneNumber:    { type: String, default: null },
+    phoneNumber:    { type: String, default: null, unique : true },
     bio:            { type: String, maxlength: 200 },
     isVerified:     { type: Boolean, default: false },
     createdAt:      { type: Date, default: Date.now },
@@ -16,6 +16,8 @@ const UserSchema = new mongoose.Schema({
 
 // Index for faster queries
 UserSchema.index({ username: 1 });
+UserSchema.index({ email: 1 });
+UserSchema.index({ phoneNumber: 1 });
 
 UserSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();

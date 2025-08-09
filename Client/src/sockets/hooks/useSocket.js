@@ -6,11 +6,18 @@ export const useSocket = () => {
   const [socket, setSocket] = useState(null);
   const [connectionError, setConnectionError] = useState(null);
 
+  const token = localStorage.getItem('token'); 
+
   useEffect(() => {
     
     const initializeSocket = async () => {
       try {
-        const socketInstance = await socketManager.connect();
+        let socketInstance;
+        if(token){
+          socketInstance = await socketManager.connectWithToken(token);
+        }else{
+          socketInstance = await socketManager.connect();
+        }
         setSocket(socketInstance);
         setIsConnected(true);
         setConnectionError(null);
@@ -22,7 +29,6 @@ export const useSocket = () => {
 
     initializeSocket();
 
-    // Set up listeners for connection state changes
     const handleConnect = () => {
       setIsConnected(true);
       setConnectionError(null);
@@ -36,7 +42,6 @@ export const useSocket = () => {
       setConnectionError(error);
     };
 
-    // Add listeners if socket exists
     const currentSocket = socketManager.getSocket();
     if (currentSocket) {
       currentSocket.on('connect', handleConnect);
@@ -44,7 +49,6 @@ export const useSocket = () => {
       currentSocket.on('error', handleError);
     }
 
-    // Cleanup
     return () => {
       const currentSocket = socketManager.getSocket();
       if (currentSocket) {
