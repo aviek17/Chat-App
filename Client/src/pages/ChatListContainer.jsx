@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Search, User, Users, UserPlus, ListFilter, MessageCircleMore, Star, Archive, UserRound } from 'lucide-react';
+import { Search, User, Users, UserPlus, ListFilter, MessageCircleMore, Star, Archive, } from 'lucide-react';
 import { colors } from '../styles/theme';
 import { useSelector } from 'react-redux';
+import NewContactContainer from '../components/NewContact';
+
 
 
 // Mock data for demonstration
@@ -282,36 +284,3 @@ const MoreOptionContainer = ({ isOpen, onClose }) => {
   </>)
 }
 
-
-
-const NewContactContainer = ({ isOpen, onClose }) => {
-  const theme = useSelector((state) => state.theme.themeMode);
-
-  const currentColors = {
-    background: colors.background[theme],
-    text: colors.text[theme],
-    chat: colors.chat[theme]
-  };
-  if (!isOpen) return null;
-  return (<>
-    <div className='absolute top-0 left-0 h-screen w-screen bg-black/5 backdrop-blur-xs z-10' onClick={() => { onClose() }}></div>
-    <div className="fixed inset-0 z-10">
-      <div className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-[500px] w-[400px] rounded-lg bg-[#ffffff] p-[20px] flex flex-col gap-[16px]' style={{ boxShadow: "rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px" }}>
-        <div className='text-[20px] text-[#000] font-normal'>New Contact</div>
-        {/* <div className='text-[14px] text-[#000] font-normal'>Add a new contact to your chat list</div> */}
-        <div className="flex items-center justify-center border border-[#b1b0b0] bg-[#b1b0b0] rounded-full w-16 h-16 mx-auto">
-          <UserRound size={30} style={{ color: "#fff" }} />
-        </div>
-        <div className='mt-1'>
-          <label className='text-[14px] font-[400] text-[#919191]'>First Name</label>
-          <input type='text' className='px-3 mt-[5px] bg-gray-100 text-gray-800 h-[30px] text-[12px] rounded border-b border-[#e0e0e0] focus:outline-none focus:ring-0 focus:border-b-2 focus:border-[#005498] w-full'/>
-        </div>
-         <div className='mt-1'>
-            <label className='text-[14px] font-[400] text-[#919191]'>Last Name</label>
-          <input type='text' className='px-3 mt-[5px] bg-gray-100 text-gray-800 h-[30px] text-[12px] rounded border-b border-[#e0e0e0] focus:outline-none focus:ring-0 focus:border-b-2 focus:border-[#005498] w-full'/>
-        </div>
-      </div>
-    </div>
-
-  </>)
-}
