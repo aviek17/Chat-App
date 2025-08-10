@@ -46,15 +46,11 @@ class ChatSocketService {
         return;
       }
 
-      // Store user connection
       this.activeUsers.set(userId, socket.id);
       socket.userId = userId;
-      // socket.emit('authenticate', { userId: userId });
 
-      // Update user online status
       await this.chatRepository.updateUserOnlineStatus(userId, true);
 
-      // Get and send recent chats
       const recentChats = await ChatService.getRecentChats(userId);
       
       socket.emit('authenticate', {
@@ -62,9 +58,6 @@ class ChatSocketService {
         recentChats,
         userId
       });
-
-      // Notify contacts that user is online
-      //this.broadcastUserStatus(userId, 'online');
 
       log.success(`User ${userId} authenticated with socket ${socket.id}`);
     } catch (error) {
@@ -79,6 +72,7 @@ class ChatSocketService {
     try {
       const { receiverId, content } = data;
       const senderId = socket.userId;
+
 
       if (!senderId) {
         socket.emit('error', { message: 'Not authenticated' });
@@ -107,7 +101,7 @@ class ChatSocketService {
 
       const receiverSocketId = this.activeUsers.get(receiverId);
 
-      console.log(receiverSocketId)
+      console.log("receiverSocketId",receiverSocketId)
       if (receiverSocketId) {
         this.io.to(receiverSocketId).emit('message_received', { message : message.content });
         await ChatService.markMessagesAsDelivered(senderId, receiverId);
