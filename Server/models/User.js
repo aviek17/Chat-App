@@ -3,11 +3,11 @@ const bcrypt = require('bcrypt');
 
 const UserSchema = new mongoose.Schema({
     uid:            { type: String, required: true, unique: true },
-    email:          { type: String, required: true, unique: true, trim: true, },
+    email:          { type: String, required: true, trim: true, },
     username:       { type: String, trim: true, },
     displayName:    { type: String, trim: true, },
-    phoneNumber:    { type: String, default: null, unique : true },
-    bio:            { type: String, maxlength: 200 },
+    phoneNumber:    { type: String, default: null,  },
+    bio:            { type: String, maxlength: 200, default: '' },
     isVerified:     { type: Boolean, default: false },
     createdAt:      { type: Date, default: Date.now },
     lastLogin:      { type: Date },

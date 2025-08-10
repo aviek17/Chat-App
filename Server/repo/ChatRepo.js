@@ -261,7 +261,9 @@ class ChatRepository {
                                     else: 0
                                 }
                             }
-                        }
+                        },
+                        totalMessages: { $sum: 1 },
+                        lastActivity: { $max: '$createdAt' }
                     }
                 },
                 {
@@ -295,10 +297,12 @@ class ChatRepository {
                         chatPartnerId: '$_id',
                         chatPartner: {
                             _id: '$userInfo._id',
-                            name: '$userInfo.name',
+                            name: '$userInfo.displayName',
                             email: '$userInfo.email',
                             avatar: '$userInfo.avatar',
-                            isOnline: '$userInfo.isOnline'
+                            userName: '$userInfo.username',
+                            bio : '$userInfo.bio',
+                            phoneNo: '$userInfo.phoneNumber'
                         },
                         lastMessage: {
                             _id: '$lastMessage._id',
@@ -325,7 +329,6 @@ class ChatRepository {
                         chat.lastMessage.encryptedContent,
                         chat.lastMessage.iv
                     );
-                    // Remove encrypted fields from response for security
                     delete chat.lastMessage.encryptedContent;
                     delete chat.lastMessage.iv;
                 }
