@@ -3,12 +3,31 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
     userInfo: {
         id: "",
-        uid: "",
         displayName: "",
         bio: "",
-        phoneNo: ""
+        phoneNo: "",
+        email : "",
+        isOnline: false,
+        username: "",
+        nickName : {
+            firstName : "",
+            lastName : ""
+        }
     },
     userProfilePicture: "",
     messages : []
 };
+
+
+
+const selectedUserSlice = createSlice({
+    name : "selectedUserData",
+    initialState,
+    reducers : {
+        setSelectedUserInfo: (state, action) => {
+            state.userInfo = action.payload;
+        }
+    }
+})
+
 
