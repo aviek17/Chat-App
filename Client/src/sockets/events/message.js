@@ -3,6 +3,7 @@ import socketManager from '../SocketManager';
 export class MessageEvents {
     // Send message
     static sendMessage(messageData) {
+        console.log(messageData)
         socketManager.emit('send_message', messageData);
     }
 

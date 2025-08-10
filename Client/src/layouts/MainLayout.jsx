@@ -1,12 +1,14 @@
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import Header from '../pages/Header'
 import MainContainer from '../pages/MainContainer'
 import Sidebar from '../pages/Sidebar'
 import { useEffect, useState } from 'react'
 import { useSocket } from '../sockets/hooks/useSocket'
 import { AuthEvents } from '../sockets/events/auth'
+import { setAllChatList } from '../store/slice/chatListSlice'
 
 const MainLayout = () => {
+    const dispatch = useDispatch();
     const { isConnected, connectionError, getDebugInfo } = useSocket();
     const userInfo = useSelector(state => state?.user?.userInfo);
     const [authAttempted, setAuthAttempted] = useState(false);
@@ -27,7 +29,9 @@ const MainLayout = () => {
 
 
         const handleAuthSuccess = (data) => {
-            console.log("Authentication successful:", data);
+            console.log("Authentication successfull:", data);
+            console.log(data.recentChats)
+            dispatch(setAllChatList(data.recentChats || []));
             setIsAuthenticated(true);
             setAuthAttempted(true);
         };

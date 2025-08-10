@@ -5,26 +5,34 @@ import { useSelector } from 'react-redux';
 import NewContactContainer from '../components/NewContact';
 
 
+const formatDateTime = (datetimeStr) => {
+    const date = new Date(datetimeStr);
+    const now = new Date();
 
-// Mock data for demonstration
-const mockChats = [
-  { id: 1, name: 'John Doe', lastMessage: 'Hey, how are you doing?', time: '12:30 PM', unreadCount: 2, avatar: 'JD' },
-  { id: 2, name: 'Sarah Wilson', lastMessage: 'See you tomorrow!', time: '11:45 AM', unreadCount: 0, avatar: 'SW' },
-  { id: 3, name: 'Team Project', lastMessage: 'Alice: Great work everyone!', time: '10:20 AM', unreadCount: 5, avatar: 'TP' },
-  { id: 4, name: 'Mom', lastMessage: 'Don\'t forget to call grandma', time: '9:15 AM', unreadCount: 1, avatar: 'M' },
-  { id: 5, name: 'David Chen', lastMessage: 'Thanks for the help!', time: 'Yesterday', unreadCount: 0, avatar: 'DC' },
-  { id: 6, name: 'Work Group', lastMessage: 'Meeting at 3 PM', time: 'Yesterday', unreadCount: 0, avatar: 'WG' },
-  { id: 7, name: 'Lisa Rodriguez', lastMessage: 'Happy birthday! 🎉', time: 'Monday', unreadCount: 0, avatar: 'LR' },
-  { id: 8, name: 'Mike Johnson', lastMessage: 'Let\'s catch up soon', time: 'Sunday', unreadCount: 0, avatar: 'MJ' },
-  { id: 9, name: 'David Chen', lastMessage: 'Thanks for the help!', time: 'Yesterday', unreadCount: 0, avatar: 'DC' },
-  { id: 10, name: 'Work Group', lastMessage: 'Meeting at 3 PM', time: 'Yesterday', unreadCount: 0, avatar: 'WG' },
-  { id: 11, name: 'Lisa Rodriguez', lastMessage: 'Happy birthday! 🎉', time: 'Monday', unreadCount: 0, avatar: 'LR' },
-  { id: 12, name: 'Mike Johnson', lastMessage: 'Let\'s catch up soon', time: 'Sunday', unreadCount: 0, avatar: 'MJ' }
-];
+    const stripTime = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+    const today = stripTime(now);
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    const givenDate = stripTime(date);
+    if (givenDate.getTime() === today.getTime()) {
+        return "Today";
+    } else if (givenDate.getTime() === yesterday.getTime()) {
+        return "Yesterday";
+    }
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); 
+    const year = String(date.getFullYear()).slice(2);
+
+    return `${day}-${month}-${year}`;
+}
+
 
 const ChatListContainer = () => {
   const theme = useSelector((state) => state.theme.themeMode);
-
+  const messageList = useSelector((state) => state.messageList.allChatList);
   const [moreOtionsOpen, setMoreOptionsOpen] = useState(false);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newContactOpen, setNewContactOpen] = useState(false);
@@ -60,6 +68,10 @@ const ChatListContainer = () => {
   const chatItemHoverStyle = {
     backgroundColor: currentColors.background.elevated
   };
+
+  const openChatContainer = (chatPartner) => {
+    
+  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-50px)] w-80 bg-white relative" style={sidebarStyle}>
@@ -99,9 +111,9 @@ const ChatListContainer = () => {
 
       <div
         className={`flex-1 overflow-y-auto transition-all duration-300 scrollbar-visible}`}>
-        {mockChats.map((chat) => (
+        {messageList.map((chat) => (
           <div
-            key={chat.id}
+            key={chat.chatPartnerId}
             className="flex items-center p-4 cursor-pointer transition-colors hover:bg-gray-50"
             style={chatItemStyle}
             onMouseEnter={(e) => {
@@ -110,24 +122,25 @@ const ChatListContainer = () => {
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
             }}
+            onClick={()=>{openChatContainer(chat.chatPartner)}}
           >
             <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center mr-3 flex-shrink-0">
               <span className="text-sm font-medium" style={{ color: currentColors.text.primary }}>
-                {chat.avatar}
+                {chat.avatar || ""}
               </span>
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <h3 className="font-medium text-sm truncate" style={{ color: currentColors.text.primary }}>
-                  {chat.name}
+                  {chat.chatPartner.displayName || chat.chatPartner.userName}
                 </h3>
                 <span className="text-xs ml-2 flex-shrink-0" style={{ color: currentColors.text.secondary }}>
-                  {chat.time}
+                  {formatDateTime(chat.lastMessage.createdAt)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <p className="text-sm truncate" style={{ color: currentColors.text.secondary }}>
-                  {chat.lastMessage}
+                  {chat.lastMessage.content}
                 </p>
                 {chat.unreadCount > 0 && (
                   <div
