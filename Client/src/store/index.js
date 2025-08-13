@@ -4,6 +4,7 @@ import menuDrawerReducer from './slice/menuDrawerSlice';
 import authSlice from "./slice/authSlice";
 import userInfoSlice from "./slice/userInfoSlice";
 import loggedUserMessageSlice from "./slice/chatListSlice";
+import selectedUserSlice from './slice/selectedUserSlice';
 import storage from 'redux-persist/lib/storage';
 import { combineReducers } from 'redux';
 import { persistStore, persistReducer } from 'redux-persist';
@@ -14,7 +15,8 @@ const rootReducer = combineReducers({
   theme: themeReducer,
   navigation: menuDrawerReducer,
   user: userInfoSlice,
-  messageList: loggedUserMessageSlice
+  messageList: loggedUserMessageSlice,
+  selectedUser : selectedUserSlice
 });
 
 
