@@ -11,14 +11,14 @@ const ALGORITHM = process.env.MESSAGE_ENCRYPTION_ALGO;
 // Helper function to decrypt message content
 function decryptContent(encryptedContent, iv) {
     if (!encryptedContent || !iv) return null;
-    
+
     try {
         const ivBuffer = Buffer.from(iv, 'hex');
         const decipher = crypto.createDecipheriv(ALGORITHM, ENCRYPTION_KEY, ivBuffer);
-        
+
         let decrypted = decipher.update(encryptedContent, 'hex', 'utf8');
         decrypted += decipher.final('utf8');
-        
+
         return decrypted;
     } catch (error) {
         console.error('Decryption error:', error);
@@ -124,18 +124,79 @@ class ChatRepository {
                 ],
                 isDeleted: false
             })
-                .populate('sender', 'username avatar')
-                .populate('receiver', 'username avatar')
-                .populate('attachment')
+                .populate('sender', 'username')
+                .populate('receiver', 'username')
+                // .populate('attachment') 
+                .select('content createdAt deliveredAt _id sender receiver encryptedContent iv')
                 .sort({ createdAt: sortOrder })
                 .skip(skip)
                 .limit(limit);
 
-            return messages;
+            return messages.map(message => ({
+                id: message._id,
+                content: message.content,
+                createdAt: message.createdAt,
+                deliveredAt: message.deliveredAt,
+                sender: message.sender,
+                receiver: message.receiver
+            }));
         } catch (error) {
             throw new Error(`Failed to get chat history: ${error.message}`);
         }
     }
+    // async getChatHistory(userId1, userId2, options = {}) {
+    //     try {
+    //         const { page = 1, limit = 50, sortOrder = -1 } = options;
+    //         const skip = (page - 1) * limit;
+
+    //         const messages = await Message.aggregate([
+    //             {
+    //                 $match: {
+    //                     $or: [
+    //                         { sender: new ObjectId(userId1), receiver: new ObjectId(userId2) },
+    //                         { sender: new ObjectId(userId2), receiver: new ObjectId(userId1) }
+    //                     ],
+    //                     isDeleted: false
+    //                 }
+    //             },
+    //             {
+    //                 $lookup: {
+    //                     from: 'users',
+    //                     localField: 'sender',
+    //                     foreignField: '_id',
+    //                     as: 'sender',
+    //                     pipeline: [{ $project: { username: 1 } }]
+    //                 }
+    //             },
+    //             {
+    //                 $lookup: {
+    //                     from: 'users',
+    //                     localField: 'receiver',
+    //                     foreignField: '_id',
+    //                     as: 'receiver',
+    //                     pipeline: [{ $project: { username: 1 } }]
+    //                 }
+    //             },
+    //             {
+    //                 $project: {
+    //                     id: '$_id',
+    //                     content: 1,
+    //                     createdAt: 1,
+    //                     deliveredAt: 1,
+    //                     sender: { $arrayElemAt: ['$sender', 0] },
+    //                     receiver: { $arrayElemAt: ['$receiver', 0] }
+    //                 }
+    //             },
+    //             { $sort: { createdAt: sortOrder } },
+    //             { $skip: skip },
+    //             { $limit: limit }
+    //         ]);
+
+    //         return messages;
+    //     } catch (error) {
+    //         throw new Error(`Failed to get chat history: ${error.message}`);
+    //     }
+    // }
 
     // Update message status
     async updateMessageStatus(filter, updateData) {
@@ -301,7 +362,7 @@ class ChatRepository {
                             email: '$userInfo.email',
                             avatar: '$userInfo.avatar',
                             userName: '$userInfo.username',
-                            bio : '$userInfo.bio',
+                            bio: '$userInfo.bio',
                             phoneNo: '$userInfo.phoneNumber'
                         },
                         lastMessage: {

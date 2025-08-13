@@ -760,7 +760,7 @@ class ChatSocketService {
     return this.activeUsers.size;
   }
 
-  isUserOnline(userId) {
+  isUserOnline({userId}) {
     return this.activeUsers.has(userId);
   }
 
