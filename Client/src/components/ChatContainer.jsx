@@ -101,7 +101,7 @@ const mockMessages = [
 const ChatContainer = () => {
 
     const theme = useSelector((state) => state.theme.themeMode);
-    const selectedChatId = "some id";
+    const selectedChatId = useSelector(state => state.selectedUser.userInfo.id);
     const [messages, setMessages] = useState(mockMessages);
     const [contact] = useState(mockContact);
 

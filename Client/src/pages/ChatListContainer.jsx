@@ -1,32 +1,34 @@
 import React, { useState } from 'react';
 import { Search, User, Users, UserPlus, ListFilter, MessageCircleMore, Star, Archive, } from 'lucide-react';
 import { colors } from '../styles/theme';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import NewContactContainer from '../components/NewContact';
+import { ChatEvents } from '../sockets/events/chat';
+import { setSelectedUserInfo } from '../store/slice/selectedUserSlice';
 
 
 const formatDateTime = (datetimeStr) => {
-    const date = new Date(datetimeStr);
-    const now = new Date();
+  const date = new Date(datetimeStr);
+  const now = new Date();
 
-    const stripTime = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const stripTime = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
-    const today = stripTime(now);
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
+  const today = stripTime(now);
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
 
-    const givenDate = stripTime(date);
-    if (givenDate.getTime() === today.getTime()) {
-        return "Today";
-    } else if (givenDate.getTime() === yesterday.getTime()) {
-        return "Yesterday";
-    }
+  const givenDate = stripTime(date);
+  if (givenDate.getTime() === today.getTime()) {
+    return "Today";
+  } else if (givenDate.getTime() === yesterday.getTime()) {
+    return "Yesterday";
+  }
 
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0'); 
-    const year = String(date.getFullYear()).slice(2);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = String(date.getFullYear()).slice(2);
 
-    return `${day}-${month}-${year}`;
+  return `${day}-${month}-${year}`;
 }
 
 
@@ -36,6 +38,7 @@ const ChatListContainer = () => {
   const [moreOtionsOpen, setMoreOptionsOpen] = useState(false);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newContactOpen, setNewContactOpen] = useState(false);
+  const dispatch = useDispatch();
 
   const currentColors = {
     background: colors.background[theme],
@@ -69,8 +72,45 @@ const ChatListContainer = () => {
     backgroundColor: currentColors.background.elevated
   };
 
+  const onReceivingUserStatus = (data) => {
+    console.log("UserOnline Status Data:", data);
+    let userOnlineStatus = {
+      isOnline : data.isOnline
+    }
+    dispatch(setSelectedUserInfo(userOnlineStatus));
+  }
+
+  const onReceivingChatHistory = (data) => {
+    console.log("Chat History Data:", data);
+  }
+
   const openChatContainer = (chatPartner) => {
-    
+    let userInfo = {
+      id: chatPartner._id,
+      displayName: chatPartner.name,
+      bio: chatPartner.bio,
+      phoneNo: chatPartner.phoneNo,
+      email: chatPartner.email,
+      username: chatPartner.userName,
+      //nickname will be set afterwards
+      nickName: {
+        firstName: "",
+        lastName: ""
+      }
+    };
+
+    dispatch(setSelectedUserInfo(userInfo));
+
+
+    ChatEvents.onReceivingUserStatus(onReceivingUserStatus);
+
+    ChatEvents.getUserOnlineStatus({userId : chatPartner._id});
+
+    ChatEvents.onChatHistoryReceived(onReceivingChatHistory);
+
+    ChatEvents.getChatHistory({ otherUserId : chatPartner._id});
+
+
   }
 
   return (
@@ -122,7 +162,7 @@ const ChatListContainer = () => {
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
             }}
-            onClick={()=>{openChatContainer(chat.chatPartner)}}
+            onClick={() => { openChatContainer(chat.chatPartner) }}
           >
             <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center mr-3 flex-shrink-0">
               <span className="text-sm font-medium" style={{ color: currentColors.text.primary }}>

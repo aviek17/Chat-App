@@ -10,6 +10,7 @@ const MessageInput = ({ onSendMessage, theme, colors }) => {
   const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef(null);
   const userInfo = useSelector(state => state?.user?.userInfo);
+  const selectedUser = useSelector(state => state.selectedUser.userInfo);
 
   const {
     isOpen: isEmojiPickerOpen,
@@ -57,9 +58,8 @@ const MessageInput = ({ onSendMessage, theme, colors }) => {
 
 
   const onMessageSend = (msg) => {
-    console.log(userInfo);
     // const socketData = { userId: userInfo?.id };
-    const messageContent = { receiverId: "6883caa351d31417050b05cd", content: msg };
+    const messageContent = { receiverId: selectedUser.id, content: msg };
 
     const handleMessageSentSuccessfully = (data) => {
       console.log("Message sent success:", data.message);
