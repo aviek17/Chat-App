@@ -2,7 +2,7 @@ import socketManager from '../SocketManager';
 
 export class AuthEvents {
   static isAuthenticated = false;
-  
+
   static authenticate(userData) {
     socketManager.emit('authenticate', userData);
   }
@@ -31,6 +31,7 @@ export class AuthEvents {
   }
 
   static removeAuthListeners() {
+    console.log("Removing auth listeners");
     socketManager.off('authenticate');
     socketManager.off('auth_error');
     socketManager.off('error');
@@ -42,5 +43,12 @@ export class AuthEvents {
 
   static resetAuthStatus() {
     this.isAuthenticated = false;
+  }
+
+  static logout() {
+    console.log("Logging out user");
+    this.removeAuthListeners();
+    this.resetAuthStatus();
+    socketManager.disconnect(); 
   }
 }
