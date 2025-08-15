@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Phone, Video, MoreVertical, Search } from 'lucide-react';
 
 const ChatHeader = ({ contact, theme, colors }) => {
@@ -76,4 +76,4 @@ const ChatHeader = ({ contact, theme, colors }) => {
     )
 }
 
-export default ChatHeader
+export default memo(ChatHeader)

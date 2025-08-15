@@ -1,16 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, memo } from 'react';
 import { Send, Paperclip, Smile, Mic } from 'lucide-react';
 import EmojiPickerComponent from './EmojiPicker';
 import { useEmojiPicker } from '../hooks/useEmojiPicker';
 import { useSelector } from 'react-redux';
 import { MessageEvents } from '../sockets/events/message';
 
-const MessageInput = ({ onSendMessage, theme, colors }) => {
+const MessageInput = ({ onSendMessage, theme, colors, selectedUserId }) => {
   const [message, setMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef(null);
   const userInfo = useSelector(state => state?.user?.userInfo);
-  const selectedUser = useSelector(state => state.selectedUser.userInfo);
 
   const {
     isOpen: isEmojiPickerOpen,
@@ -56,10 +55,9 @@ const MessageInput = ({ onSendMessage, theme, colors }) => {
     }
   };
 
-
   const onMessageSend = (msg) => {
     // const socketData = { userId: userInfo?.id };
-    const messageContent = { receiverId: selectedUser.id, content: msg };
+    const messageContent = { receiverId: selectedUserId, content: msg };
 
     const handleMessageSentSuccessfully = (data) => {
       console.log("Message sent success:", data.message);
@@ -199,4 +197,4 @@ const MessageInput = ({ onSendMessage, theme, colors }) => {
   );
 };
 
-export default MessageInput;
+export default memo(MessageInput);

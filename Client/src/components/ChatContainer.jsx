@@ -1,9 +1,10 @@
 import { useSelector } from "react-redux";
 import { colors } from "../styles/theme";
-import { useCallback, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import ChatHeader from "./ChatHeader";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
+import { ChatEvents } from "../sockets/events/chat";
 
 
 const mockContact = {
@@ -101,7 +102,8 @@ const mockMessages = [
 const ChatContainer = () => {
 
     const theme = useSelector((state) => state.theme.themeMode);
-    const selectedChatId = useSelector(state => state.selectedUser.userInfo.id);
+    const selectedUserInfo = useSelector(state => state.selectedUser.userInfo);
+    const usersMsgsList = useSelector(state => state.allUsersMsgs);
     const [messages, setMessages] = useState(mockMessages);
     const [contact] = useState(mockContact);
 
@@ -111,12 +113,53 @@ const ChatContainer = () => {
         chat: colors.chat[theme]
     };
 
-     const handleNewMessage = useCallback((newMessage) => {
-        console.log('New message received in parent:', newMessage); 
-        window.alert(`New message: ${newMessage.message}`);      
+    const handleNewMessage = useCallback((newMessage) => {
+        console.log('New message received in parent:', newMessage);
+        window.alert(`New message: ${newMessage.message}`);
     }, []);
 
-    if (!selectedChatId) {
+
+    const handleSendMessage = (newMessage) => {
+        const message = {
+            ...newMessage,
+            id: Date.now(),
+        };
+        setMessages(prev => [...prev, message]);
+    };
+
+    const handleChatHistoryReceived = useCallback((chatHistory) => {
+        console.log('Chat history received:', chatHistory);
+    }, []);
+
+    useEffect(() => {
+        ChatEvents.onChatHistoryReceived(handleChatHistoryReceived);
+
+        return () => {
+            ChatEvents.offChatHistoryReceived(handleChatHistoryReceived);
+        };
+    }, [handleChatHistoryReceived]);
+
+    useEffect(() => {
+        if (!selectedUserInfo.id) {
+            setMessages([]);
+            return;
+        }
+
+        const cachedMessages = usersMsgsList[selectedUserInfo.id];
+        if (cachedMessages) {
+            console.log("Using cached messages:", cachedMessages);
+            // setMessages(cachedMessages);
+            return;
+        }
+
+        console.log("Fetching chat history for user:", selectedUserInfo.id);
+        const data = { otherUserId: selectedUserInfo.id };
+        ChatEvents.getChatHistory(data);
+
+        setMessages([]);
+    }, [selectedUserInfo.id]);
+
+    if (!selectedUserInfo.id) {
         return (
             <div
                 className="flex-1 flex items-center justify-center"
@@ -143,27 +186,20 @@ const ChatContainer = () => {
             </div >
         );
     }
-    
 
-    const handleSendMessage = (newMessage) => {
-        const message = {
-            ...newMessage,
-            id: Date.now(), 
-        };
-        setMessages(prev => [...prev, message]);
-    };
 
+    //i will not keep any logic of fetching msgs here everythig will be handled separately in individual component
 
     return (
         <div
             className="flex-1 flex flex-col h-[calc(100vh-50px)]"
             style={{ backgroundColor: currentColors.background.primary }}
         >
-            <ChatHeader contact={contact} theme={theme} colors={colors} />
-            <MessageList messages={messages} theme={theme} colors={colors} onNewMessage={handleNewMessage}/>
-            <MessageInput onSendMessage={handleSendMessage} theme={theme} colors={colors} />
+            <ChatHeader selectedUserInfo={selectedUserInfo} contact={contact} theme={theme} colors={colors} />
+            <MessageList selectedUserId={selectedUserInfo.id} theme={theme} colors={colors} onNewMessage={handleNewMessage} />
+            <MessageInput selectedUserId={selectedUserInfo.id} onSendMessage={handleSendMessage} theme={theme} colors={colors} />
         </div>
     )
 }
 
-export default ChatContainer
+export default memo(ChatContainer)
