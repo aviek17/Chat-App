@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import MessageBubble from './MessageBubble';
 import { MessageEvents } from '../sockets/events/message';
 import { useSocket } from '../sockets/hooks/useSocket';
@@ -151,4 +151,4 @@ const MessageList = ({ messages, theme, colors, onNewMessage }) => {
   );
 };
 
-export default MessageList;
+export default memo(MessageList);

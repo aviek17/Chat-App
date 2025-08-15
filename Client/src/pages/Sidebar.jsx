@@ -10,10 +10,12 @@ import ExitToAppIcon from '../BoxIcons/ExitToApplication';
 import { Divider, Modal } from '@mui/material';
 import { useDispatch } from 'react-redux';
 import { toggleMenuState } from '../store/slice/menuDrawerSlice';
+import { removeUerInfo } from '../store/slice/selectedUserSlice';
 import MenuDrawer from '../components/MenuDrawer';
 import { logout } from '../store/slice/authSlice';
 import { useState } from 'react';
 import Profile from './Profile';
+import { AuthEvents } from '../sockets/events/auth';
 
 
 const Sidebar = () => {
@@ -56,7 +58,12 @@ const Sidebar = () => {
         },
         {
             icon: ExitToAppIcon,
-            onClick: () => { dispatch(logout()); console.log("clicked logout"); }
+            onClick: () => { 
+                AuthEvents.logout();
+                dispatch(logout()); 
+                dispatch(removeUerInfo());
+                console.log("clicked logout");                 
+            }
         }
     ];
 

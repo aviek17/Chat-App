@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { Search, User, Users, UserPlus, ListFilter, MessageCircleMore, Star, Archive, } from 'lucide-react';
 import { colors } from '../styles/theme';
 import { useDispatch, useSelector } from 'react-redux';
@@ -80,10 +80,6 @@ const ChatListContainer = () => {
     dispatch(setSelectedUserInfo(userOnlineStatus));
   }
 
-  const onReceivingChatHistory = (data) => {
-    console.log("Chat History Data:", data);
-  }
-
   const openChatContainer = (chatPartner) => {
     let userInfo = {
       id: chatPartner._id,
@@ -105,10 +101,6 @@ const ChatListContainer = () => {
     ChatEvents.onReceivingUserStatus(onReceivingUserStatus);
 
     ChatEvents.getUserOnlineStatus({userId : chatPartner._id});
-
-    ChatEvents.onChatHistoryReceived(onReceivingChatHistory);
-
-    ChatEvents.getChatHistory({ otherUserId : chatPartner._id});
 
 
   }
@@ -211,7 +203,7 @@ const ChatListContainer = () => {
   )
 }
 
-export default ChatListContainer
+export default memo(ChatListContainer)
 
 
 
