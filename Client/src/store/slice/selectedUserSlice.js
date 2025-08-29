@@ -38,10 +38,15 @@ const selectedUserSlice = createSlice({
         },
         setUserNewMessage: (state, action) => {
             state.messages.push(action.payload);
+        },
+        removeUerInfo: (state) => {
+            state.userInfo = initialState.userInfo;
+            state.userProfilePicture = initialState.userProfilePicture; 
+            state.messages = initialState.messages;
         }
     }
 })
 
-export const { setSelectedUserInfo, setUserProfilePicture, setUserMessages, setUserNewMessage } = selectedUserSlice.actions;
+export const { setSelectedUserInfo, setUserProfilePicture, setUserMessages, setUserNewMessage, removeUerInfo } = selectedUserSlice.actions;
 
 export default selectedUserSlice.reducer;

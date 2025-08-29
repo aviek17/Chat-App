@@ -127,7 +127,7 @@ class ChatRepository {
                 .populate('sender', 'username')
                 .populate('receiver', 'username')
                 // .populate('attachment') 
-                .select('content createdAt deliveredAt _id sender receiver encryptedContent iv')
+                .select('content createdAt deliveredAt _id sender receiver encryptedContent iv status')
                 .sort({ createdAt: sortOrder })
                 .skip(skip)
                 .limit(limit);
@@ -138,7 +138,8 @@ class ChatRepository {
                 createdAt: message.createdAt,
                 deliveredAt: message.deliveredAt,
                 sender: message.sender,
-                receiver: message.receiver
+                receiver: message.receiver,
+                status: message.status
             }));
         } catch (error) {
             throw new Error(`Failed to get chat history: ${error.message}`);
