@@ -19,7 +19,7 @@ const initialState = {
 
 
 const loggedUserMessageSlice = createSlice({
-   name: 'message',
+   name: 'loggedUserMessageList',
    initialState: {
       ...initialState
    },
