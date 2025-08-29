@@ -5,6 +5,7 @@ import authSlice from "./slice/authSlice";
 import userInfoSlice from "./slice/userInfoSlice";
 import loggedUserMessageSlice from "./slice/chatListSlice";
 import selectedUserSlice from './slice/selectedUserSlice';
+import allUserMsgSlice from './slice/allUserMessageSlice';
 import storage from 'redux-persist/lib/storage';
 import { combineReducers } from 'redux';
 import { persistStore, persistReducer } from 'redux-persist';
@@ -16,7 +17,8 @@ const rootReducer = combineReducers({
   navigation: menuDrawerReducer,
   user: userInfoSlice,
   messageList: loggedUserMessageSlice,
-  selectedUser : selectedUserSlice
+  selectedUser : selectedUserSlice,
+  allUsersMsgs : allUserMsgSlice
 });
 
 
