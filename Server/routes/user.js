@@ -13,6 +13,6 @@ router.post('/sign-up', validateRequest(userRequestSchema), userController.signu
 
 router.post("/login",  validateRequest(userRequestSchema), userController.login);
 
-router.get("/vercel/status", (req, res)=> res.send("Vercel is up and running!"));
+router.get("/vercel/status", (req, res)=> res.json("Vercel is up and running! Enjoy developement!!!"));
 
 module.exports = router;
