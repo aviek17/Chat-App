@@ -2,12 +2,16 @@ import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import MessageBubble from './MessageBubble';
 import { MessageEvents } from '../sockets/events/message';
 import { useSocket } from '../sockets/hooks/useSocket';
+import { useSelector } from 'react-redux';
+import { ChatEvents } from '../sockets/events/chat';
 
-const MessageList = ({ messages, theme, colors, onNewMessage }) => {
+const MessageList = ({ selectedUserId, theme, colors, onNewMessage }) => {
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef(null);
+  const [messages, setMessages] = useState([]);
+  const usersMsgsList = useSelector(state => state.allUsersMsgs);
 
   const { isConnected } = useSocket();
 
@@ -20,6 +24,39 @@ const MessageList = ({ messages, theme, colors, onNewMessage }) => {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const handleChatHistoryReceived = useCallback((chatHistory) => {
+    console.log('Chat history received:', chatHistory);
+    setMessages(chatHistory?.messages || []);
+  }, []);
+
+  useEffect(() => {
+    ChatEvents.onChatHistoryReceived(handleChatHistoryReceived);
+
+    return () => {
+      ChatEvents.offChatHistoryReceived(handleChatHistoryReceived);
+    };
+  }, [handleChatHistoryReceived]);
+
+  useEffect(() => {
+    if (!selectedUserId) {
+      setMessages([]);
+      return;
+    }
+
+    const cachedMessages = usersMsgsList[selectedUserId];
+    if (cachedMessages) {
+      console.log("Using cached messages:", cachedMessages);
+      // setMessages(cachedMessages);
+      return;
+    }
+
+    console.log("Fetching chat history for user:", selectedUserId);
+    const data = { otherUserId: selectedUserId };
+    ChatEvents.getChatHistory(data);
+
+    setMessages([]);
+  }, [selectedUserId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -39,10 +76,7 @@ const MessageList = ({ messages, theme, colors, onNewMessage }) => {
     }, 1000);
   };
 
-  // Create stable reference for the socket event handler
   const handleNewMessage = useCallback((message) => {
-
-    // Call the parent's handler
     if (onNewMessage) {
       onNewMessage(message);
     } else {
@@ -50,7 +84,6 @@ const MessageList = ({ messages, theme, colors, onNewMessage }) => {
     }
   }, [onNewMessage]);
 
-  // Register socket event listener with better debugging
   useEffect(() => {
     console.log('MessageList useEffect triggered:', {
       isConnected,
@@ -69,7 +102,7 @@ const MessageList = ({ messages, theme, colors, onNewMessage }) => {
     };
   }, [isConnected, handleNewMessage]);
 
-  // Additional debugging effect to monitor socket state
+
   useEffect(() => {
     console.log('MessageList: Socket state changed:', {
       isConnected,
@@ -95,12 +128,13 @@ const MessageList = ({ messages, theme, colors, onNewMessage }) => {
   const groupMessagesByDate = (messages) => {
     const grouped = {};
     messages.forEach(message => {
-      const date = formatMessageDate(message.timestamp);
+      const date = formatMessageDate(message.createdAt);
       if (!grouped[date]) {
         grouped[date] = [];
       }
       grouped[date].push(message);
     });
+    console.log("grouped messages:", grouped);
     return grouped;
   };
 
@@ -141,6 +175,7 @@ const MessageList = ({ messages, theme, colors, onNewMessage }) => {
               message={message}
               theme={theme}
               colors={colors}
+              selectedUserId={selectedUserId}
             />
           ))}
         </div>

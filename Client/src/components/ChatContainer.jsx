@@ -188,7 +188,7 @@ const ChatContainer = () => {
     }
 
 
-    //i will not keep any logic of fetching msgs here everythig will be handled separately in individual component
+    // will not keep any logic of fetching msgs here everythig will be handled separately in individual component
 
     return (
         <div

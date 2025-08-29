@@ -1,19 +1,19 @@
 
 import { Check, CheckCheck } from 'lucide-react';
 
-const MessageBubble = ({ message, theme, colors }) => {
+const MessageBubble = ({ message, theme, colors, selectedUserId }) => {
   const currentColors = {
     background: colors.background[theme],
     text: colors.text[theme],
     chat: colors.chat[theme]
   };
 
-  const isUserMessage = message.sender === 'user';
-  
+  const isUserMessage = message?.sender?._id === selectedUserId;
+
   const bubbleStyle = {
     backgroundColor: isUserMessage ? currentColors.chat.userBubble : currentColors.chat.otherBubble,
     color: isUserMessage ? currentColors.chat.userBubbleText : currentColors.chat.otherBubbleText,
-    maxWidth: '70%'
+    maxWidth: '100%'
   };
 
   const getStatusIcon = (status) => {
@@ -44,26 +44,26 @@ const MessageBubble = ({ message, theme, colors }) => {
             </span>
           </div>
         )}
-        
+
         <div className="flex flex-col">
           {!isUserMessage && message.senderName && (
             <span className="text-xs mb-1 ml-3" style={{ color: currentColors.text.secondary }}>
-              {message.senderName}
+              {message?.sender?.userName}
             </span>
           )}
-          
-          <div 
-            className={`px-4 py-2 rounded-lg relative ${
-              isUserMessage 
-                ? 'rounded-br-sm' 
+
+          <div
+            className={`px-4 py-2 rounded-lg relative ${isUserMessage
+                ? 'rounded-br-sm'
                 : 'rounded-bl-sm'
-            }`}
+              }`}
             style={bubbleStyle}
           >
-            {message.type === 'text' && (
-              <p className="text-sm break-words whitespace-pre-wrap">
-                {message.content}
-              </p>
+            <p className="text-sm break-words whitespace-pre-wrap">
+              {message.content}
+            </p>
+            {/* {message.type === 'text' && (
+              
             )}
             
             {message.type === 'image' && (
@@ -92,11 +92,11 @@ const MessageBubble = ({ message, theme, colors }) => {
                   <p className="text-xs opacity-70">{message.fileSize}</p>
                 </div>
               </div>
-            )}
-            
+            )} */}
+
             <div className="flex items-center justify-end space-x-1 mt-1">
               <span className="text-xs opacity-70">
-                {formatTime(message.timestamp)}
+                {formatTime(message.createdAt)}
               </span>
               {isUserMessage && getStatusIcon(message.status)}
             </div>
