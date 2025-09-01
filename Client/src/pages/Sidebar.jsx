@@ -14,8 +14,8 @@ import { removeUerInfo } from '../store/slice/selectedUserSlice';
 import MenuDrawer from '../components/MenuDrawer';
 import { logout } from '../store/slice/authSlice';
 import { useState } from 'react';
-import Profile from './Profile';
 import { AuthEvents } from '../sockets/events/auth';
+import Profile from '../components/Profile';
 
 
 const Sidebar = () => {
@@ -86,14 +86,11 @@ const Sidebar = () => {
             <MenuDrawer />
 
 
-            <Modal
-                open={profileModalOpen}
-                onClose={() => { setProfileModalOpen(false); }}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
-            >
-                <Profile />
-            </Modal>
+            {
+                profileModalOpen && <>
+                    <Profile isOpen={profileModalOpen}/>
+                </>
+            }
 
         </>
     )
