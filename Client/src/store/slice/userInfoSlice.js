@@ -6,7 +6,8 @@ const initialState = {
         uid: "",
         displayName: "",
         bio: "",
-        phoneNo: ""
+        phoneNo: "",
+        userName : ""
     },
     userProfilePicture: "",
     selectedUserIdForChat : "",

@@ -10,7 +10,8 @@ const getUserInfo = (user) => {
         displayName: user.displayName || user.username,
         bio: user.bio || "",
         phoneNo: user.phoneNumber || "",
-        email : user.email
+        email : user.email,
+        userName : user.username
     }
 }
 
@@ -49,7 +50,6 @@ const handleUserLogin = async (userInfo) => {
     }
 
     await updateLastLogin(existingUser);
-
     const token = generateToken({ id: existingUser.uid, email: email });
     return { token, user: getUserInfo(existingUser) };
 
