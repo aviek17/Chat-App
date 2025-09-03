@@ -88,7 +88,7 @@ const Sidebar = () => {
 
             {
                 profileModalOpen && <>
-                    <Profile isOpen={profileModalOpen}/>
+                    <Profile isOpen={profileModalOpen} onClose={() => {setProfileModalOpen(false);}}/>
                 </>
             }
 
