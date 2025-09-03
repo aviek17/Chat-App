@@ -1,18 +1,21 @@
-import React from 'react'
+import React from "react";
 
 const CustomModal = ({ isOpen, onClose, children }) => {
-
     if (!isOpen) return null;
 
     return (
-        <>
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+            onClick={onClose}
+        >
             <div
-                className="absolute top-0 left-0 h-screen w-screen bg-black/30 backdrop-blur-sm z-50"
-                onClick={() => onClose()}
-            ></div>
-            <div className="relative z-100">{children}</div>
-        </>
-    )
-}
+                className="relative bg-white rounded-lg shadow-lg"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {children}
+            </div>
+        </div>
+    );
+};
 
 export default React.memo(CustomModal);
