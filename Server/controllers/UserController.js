@@ -22,4 +22,9 @@ const login = async (req, res, next) => {
     }
 }
 
-module.exports = { signup, login };
+
+const updateProfile = async (req, res, next) => {
+    
+}
+
+module.exports = { signup, login, updateProfile };

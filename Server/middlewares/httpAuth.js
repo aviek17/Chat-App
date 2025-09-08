@@ -21,6 +21,7 @@ const httpAuthMiddleware = async (req, res, next) => {
         // Use token data for performance (skip DB lookup for most cases)
         if (decoded.email && decoded.username && decoded.uid) {
             req.user = {
+                id: decoded.id,
                 uid: decoded.uid,
                 email: decoded.email,
                 username: decoded.username
