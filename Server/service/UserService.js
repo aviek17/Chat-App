@@ -50,7 +50,7 @@ const handleUserLogin = async (userInfo) => {
     }
 
     await updateLastLogin(existingUser);
-    const token = generateToken({ id: existingUser.uid, email: email });
+    const token = generateToken({ id: existingUser._id, uid: existingUser.uid, email: email, username : existingUser.username });
     return { token, user: getUserInfo(existingUser) };
 
 }
