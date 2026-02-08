@@ -6,6 +6,7 @@ import { updateProfilePic } from '../services/user.service';
 
 const Profile = ({ isOpen, onClose }) => {
     const user = useSelector(state => state?.user);
+    console.log(user?.userInfo)
 
     const [data, setUserData] = useState(
         {
@@ -37,9 +38,13 @@ const Profile = ({ isOpen, onClose }) => {
             alert("Cannot upload this image");
             return;
         }
-        const base64 = await fileToBase64(file);
-        // const res = await updateProfilePic(base64);
-        setProfilePhoto(base64)
+        const formData = new FormData();
+        formData.append("profilePicture", file);
+        formData.append("uid", data?.uid)
+        const res = await updateProfilePic(formData);
+        // const base64 = await fileToBase64(file);
+        // 
+        // setProfilePhoto(base64)
 
     }
 
@@ -51,7 +56,8 @@ const Profile = ({ isOpen, onClose }) => {
             userName: userData?.userName || "",
             displayName: userData?.displayName || "",
             phoneNo: userData?.phoneNo || "",
-            bio: userData?.bio || ""
+            bio: userData?.bio || "",
+            uid: userData?.uid || ""
         })
         setProfilePhoto(userData?.profilePicture ?? "");
     }, [user?.userInfo])
