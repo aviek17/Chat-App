@@ -18,4 +18,14 @@ export const signup = async (credentials) => {
     } catch (error) {
         throw error.response ? error.response.data : error.message;
     }
-}   
+}
+
+
+export const updateProfilePic = async (imageURL) => {
+    try {
+        const response = await api.post(API_USER.UPDATING_PROFILE_PIC, imageURL);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error.message;
+    }
+}

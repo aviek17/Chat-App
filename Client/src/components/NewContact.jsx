@@ -197,7 +197,7 @@ const NewContactContainer = ({ isOpen, onClose }) => {
             <UserRound size={30} style={{ color: "#fff" }} />
           </div>
 
-          <div className='w-full h-[50px] mt-[10px] rounded-md p-[8px] pl-[12px] pr-[12px] border-1 border-[#bdbdbd] flex items-center justify-between gap-[10px]'>
+          {/* <div className='w-full h-[50px] mt-[10px] rounded-md p-[8px] pl-[12px] pr-[12px] border-1 border-[#bdbdbd] flex items-center justify-between gap-[10px]'>
             <div
               className={`flex items-center justify-center gap-[8px] text-[14px] font-[500] cursor-pointer p-[8px] rounded-sm w-[50%] ${
                 selectedMode === "userName" ? "bg-[#e0e0e0] text-[#000]" : "bg-[#ffffff] text-[#cdcdcd]"
@@ -216,7 +216,7 @@ const NewContactContainer = ({ isOpen, onClose }) => {
               <Smartphone size={18} />
               Phone
             </div>
-          </div>
+          </div> */}
 
           <div className='mt-1 relative'>
             <label className='text-[14px] font-[400] text-[#919191]'>
