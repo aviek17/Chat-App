@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import CustomModal from './CustomModal'
 import { Camera, User, Mail, Phone, Edit3 } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { updateProfilePic } from '../services/user.service';
+import { API_USER } from '../utils/constants/api.constants';
+import { setProfilePhotoFileName } from '../store/slice/userInfoSlice';
+import { getBase64FromFile, getBase64FromUrl } from '../services/common.service';
+
 
 const Profile = ({ isOpen, onClose }) => {
     const user = useSelector(state => state?.user);
-    console.log(user?.userInfo)
+    const dispatch = useDispatch();
+
+    console.log(user)
 
     const [data, setUserData] = useState(
         {
@@ -24,13 +30,6 @@ const Profile = ({ isOpen, onClose }) => {
         onClose();
     }
 
-    const fileToBase64 = (file) =>
-        new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-        });
 
 
     const uploadProfilePicture = async file => {
@@ -40,13 +39,19 @@ const Profile = ({ isOpen, onClose }) => {
         }
         const formData = new FormData();
         formData.append("profilePicture", file);
-        formData.append("uid", data?.uid)
         const res = await updateProfilePic(formData);
-        // const base64 = await fileToBase64(file);
-        // 
-        // setProfilePhoto(base64)
-
+        dispatch(setProfilePhotoFileName(res.filename));
+        const base64Image = await getBase64FromFile(res.filename);
+        setProfilePhoto(base64Image);
     }
+
+    const updateProfilePicture = async () => {
+        if (user?.userProfilePicture) {
+            const base64Image = await getBase64FromFile( user?.userProfilePicture);
+            setProfilePhoto(base64Image);
+        }
+    }
+
 
 
     useEffect(() => {
@@ -59,7 +64,7 @@ const Profile = ({ isOpen, onClose }) => {
             bio: userData?.bio || "",
             uid: userData?.uid || ""
         })
-        setProfilePhoto(userData?.profilePicture ?? "");
+        updateProfilePicture();
     }, [user?.userInfo])
 
 

@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import NewContactContainer from '../components/NewContact';
 import { ChatEvents } from '../sockets/events/chat';
 import { setSelectedUserInfo } from '../store/slice/selectedUserSlice';
+import { getBase64FromFile, getStaticImageUrl } from '../services/common.service';
 
 
 const formatDateTime = (datetimeStr) => {
@@ -35,6 +36,7 @@ const formatDateTime = (datetimeStr) => {
 const ChatListContainer = () => {
   const theme = useSelector((state) => state.theme.themeMode);
   const messageList = useSelector((state) => state.messageList.allChatList);
+  console.log(messageList)
   const [moreOtionsOpen, setMoreOptionsOpen] = useState(false);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newContactOpen, setNewContactOpen] = useState(false);
@@ -75,7 +77,7 @@ const ChatListContainer = () => {
   const onReceivingUserStatus = (data) => {
     console.log("UserOnline Status Data:", data);
     let userOnlineStatus = {
-      isOnline : data.isOnline
+      isOnline: data.isOnline
     }
     dispatch(setSelectedUserInfo(userOnlineStatus));
   }
@@ -100,7 +102,7 @@ const ChatListContainer = () => {
 
     ChatEvents.onReceivingUserStatus(onReceivingUserStatus);
 
-    ChatEvents.getUserOnlineStatus({userId : chatPartner._id});
+    ChatEvents.getUserOnlineStatus({ userId: chatPartner._id });
 
 
   }
@@ -156,10 +158,14 @@ const ChatListContainer = () => {
             }}
             onClick={() => { openChatContainer(chat.chatPartner) }}
           >
-            <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center mr-3 flex-shrink-0">
-              <span className="text-sm font-medium" style={{ color: currentColors.text.primary }}>
-                {chat.avatar || ""}
-              </span>
+            <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden">
+              {chat.chatPartner?.profilePicture && (
+                <img
+                  src={getStaticImageUrl(chat.chatPartner.profilePicture)}
+                  alt="Profile Pic"
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">

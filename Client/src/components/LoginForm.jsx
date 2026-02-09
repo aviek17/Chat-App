@@ -13,7 +13,7 @@ import { useDispatch } from 'react-redux';
 import { setToken } from '../store/slice/authSlice.js';
 import ErrorModal from './ErrorModal.jsx';
 import { AuthEvents } from '../sockets/events/auth.js';
-import { setUserInfo } from '../store/slice/userInfoSlice.js';
+import { setProfilePhotoFileName, setUserInfo } from '../store/slice/userInfoSlice.js';
 const LoginForm = () => {
     const nav = useNavigate();
     const dispatch = useDispatch();
@@ -89,11 +89,12 @@ const LoginForm = () => {
         try {
 
             const response = await login(formData);
-            if(response.token){
+            if (response.token) {
                 dispatch(setUserInfo(response.user));
                 dispatch(setToken(response.token));
+                dispatch(setProfilePhotoFileName(response?.user?.profilePicture));
                 setShowSuccessModal(true);
-            }            
+            }
 
         } catch (error) {
             console.error('Authentication error:', error);

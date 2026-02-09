@@ -31,7 +31,6 @@ export const updateProfilePic = async (formData) => {
             API_USER.UPDATING_PROFILE_PIC,
             formData
         );
-
         return response.data;
     } catch (error) {
         throw error.response ? error.response.data : error.message;
