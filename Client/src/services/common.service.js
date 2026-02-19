@@ -16,7 +16,6 @@ export const getBase64FromUrl = async (url) => {
 
 export const getBase64FromFile = async (file) => {
     const imageUrl = baseUrl + API_USER.FETCH_PROFILE_PIC + file;
-    console.log("Fetching image from URL:", imageUrl);
     return await getBase64FromUrl(imageUrl);
 }
 

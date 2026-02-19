@@ -45,7 +45,7 @@ const SuggestionItem = React.memo(({ suggestion, isSelected, onClick }) => (
 ));
 
 const NewContactContainer = ({ isOpen, onClose }) => {
-  const [selectedMode, setSelectedMode] = useState('userName');
+  const [selectedMode, setSelectedMode] = useState('phoneNumber');
   const [userNameValue, setUserNameValue] = useState('');
   const [phoneNumberValue, setPhoneNumberValue] = useState('');
   const [firstName, setFirstName] = useState('');

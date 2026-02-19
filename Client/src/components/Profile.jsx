@@ -2,17 +2,15 @@ import React, { useEffect, useState } from 'react'
 import CustomModal from './CustomModal'
 import { Camera, User, Mail, Phone, Edit3 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateProfilePic } from '../services/user.service';
+import { updateProfile, updateProfilePic } from '../services/user.service';
 import { API_USER } from '../utils/constants/api.constants';
-import { setProfilePhotoFileName } from '../store/slice/userInfoSlice';
+import { setProfilePhotoFileName, setUserInfo } from '../store/slice/userInfoSlice';
 import { getBase64FromFile, getBase64FromUrl } from '../services/common.service';
 
 
 const Profile = ({ isOpen, onClose }) => {
     const user = useSelector(state => state?.user);
     const dispatch = useDispatch();
-
-    console.log(user)
 
     const [data, setUserData] = useState(
         {
@@ -30,8 +28,6 @@ const Profile = ({ isOpen, onClose }) => {
         onClose();
     }
 
-
-
     const uploadProfilePicture = async file => {
         if (!file.type.startsWith("image/")) {
             alert("Cannot upload this image");
@@ -47,12 +43,16 @@ const Profile = ({ isOpen, onClose }) => {
 
     const updateProfilePicture = async () => {
         if (user?.userProfilePicture) {
-            const base64Image = await getBase64FromFile( user?.userProfilePicture);
+            const base64Image = await getBase64FromFile(user?.userProfilePicture);
             setProfilePhoto(base64Image);
         }
     }
 
-
+    const saveProfileData = async () => {
+        const responseData = await updateProfile(data);
+        dispatch(setUserInfo(responseData.user));
+        onClose();
+    }
 
     useEffect(() => {
         let userData = user?.userInfo;
@@ -235,7 +235,7 @@ const Profile = ({ isOpen, onClose }) => {
                                 >
                                     Cancel
                                 </button>
-                                <button className="px-8 py-2.5 rounded-3xl bg-[#005498] text-white font-medium shadow-lg shadow-blue-900/20 hover:bg-[#00447a] hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
+                                <button className="px-8 py-2.5 rounded-3xl bg-[#005498] text-white font-medium shadow-lg shadow-blue-900/20 hover:bg-[#00447a] hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 cursor-pointer" onClick={saveProfileData}>
                                     Save Changes
                                 </button>
                             </div>
