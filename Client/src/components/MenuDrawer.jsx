@@ -11,6 +11,7 @@ import DonutLargeRoundedIcon from "../BoxIcons/DonutLargeRoundedIcon";
 import MenuIcon from '../BoxIcons/MenuIcon';
 import AccountCircleOutlinedIcon from "../BoxIcons/AccountCircleOutlinedIcon";
 import ExitToAppIcon from '../BoxIcons/ExitToApplication';
+import { UserRoundPlus } from 'lucide-react';
 
 const MenuDrawer = () => {
     const menuState = useSelector(state => state.navigation?.menuDrawerState);
@@ -28,7 +29,7 @@ const MenuDrawer = () => {
                     paper: {
                         sx: {
                             backgroundColor: '#e9f5ff08',
-                            backdropFilter: 'blur(10px)',
+                            backdropFilter: 'blur(40px)',
                             borderTopRightRadius: '10px',
                             borderBottomRightRadius: '10px',
                         },
@@ -46,6 +47,7 @@ const MenuDrawer = () => {
                         <div className='flex flex-col gap-2.5'>
                             <MenuIconDetails Icon={MenuIcon} />
                             <MenuIconDetails Icon={Chat} label='Chat' statusVal={10} selected />
+                            <MenuIconDetails Icon={UserRoundPlus} label='New Friends' statusVal={10} />
                             <MenuIconDetails Icon={DonutLargeRoundedIcon} label='Status' hoverReqd statusSymbol />
                         </div>
                         <div className='mt-[15px] flex flex-col gap-1.5 mb-[15px] items-center'>
@@ -53,7 +55,7 @@ const MenuDrawer = () => {
                             <MenuIconDetails Icon={Archive} label='Archived Chats' />
                             <Divider sx={{ borderColor: '#005498', width: "90%" }} />
                             <MenuIconDetails Icon={AccountCircleOutlinedIcon} label='Profile' />
-                            <MenuIconDetails Icon={Setting} label='Setting' />
+                            {/* <MenuIconDetails Icon={Setting} label='Setting' /> */}
                             <MenuIconDetails Icon={ExitToAppIcon} label='Exit App' />
                         </div>
                     </div>

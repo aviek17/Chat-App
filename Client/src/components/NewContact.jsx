@@ -2,55 +2,41 @@ import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { useSelector } from 'react-redux';
 import { UserRound, CircleUser, Smartphone, X, User } from 'lucide-react';
 import { colors } from '../styles/theme';
+import { addNewContact, getuserOnPhoneNumber } from '../services/user.service';
+import { getBase64FromFile, getStaticImageUrl } from '../services/common.service';
 
-const MOCK_CONTACTS = [
-  { email: 'rahul.sharma@example.com', firstName: 'Rahul', lastName: 'Sharma', phoneNumber: '9876543210' },
-  { email: 'priya.verma@company.com', firstName: 'Priya', lastName: 'Verma', phoneNumber: '9123456780' },
-  { email: 'arjun.mehta@domain.org', firstName: 'Arjun', lastName: 'Mehta', phoneNumber: '9988776655' },
-  { email: 'neha.kapoor@email.net', firstName: 'Neha', lastName: 'Kapoor', phoneNumber: '9090909090' },
-  { email: 'vikram.singh@test.com', firstName: 'Vikram', lastName: 'Singh', phoneNumber: '9871234567' },
-  { email: 'sneha.patel@gmail.com', firstName: 'Sneha', lastName: 'Patel', phoneNumber: '9812345678' },
-  { email: 'amit.kumar@yahoo.com', firstName: 'Amit', lastName: 'Kumar', phoneNumber: '9822334455' },
-  { email: 'kavya.nair@outlook.com', firstName: 'Kavya', lastName: 'Nair', phoneNumber: '9797979797' },
-  { email: 'rohit.chowdhury@hotmail.com', firstName: 'Rohit', lastName: 'Chowdhury', phoneNumber: '9765432109' },
-  { email: 'anjali.reddy@rediffmail.com', firstName: 'Anjali', lastName: 'Reddy', phoneNumber: '9755555555' }
-];
 
-const searchContacts = async (query) => {
-  await new Promise(resolve => setTimeout(resolve, 300));
-  const lowerQuery = query.toLowerCase();
-  return MOCK_CONTACTS.filter(contact =>
-    contact.email.toLowerCase().includes(lowerQuery) ||
-    contact.firstName.toLowerCase().includes(lowerQuery) ||
-    contact.lastName.toLowerCase().includes(lowerQuery) ||
-    contact.phoneNumber.includes(query)
-  );
-};
+const SuggestionItem = React.memo(({ suggestion, isSelected, onClick }) => {
+  if (!suggestion?.displayName) return null;
 
-const SuggestionItem = React.memo(({ suggestion, isSelected, onClick }) => (
-  <div
-    className={`px-3 py-2 cursor-pointer flex items-center gap-2 ${
-      isSelected ? 'bg-[#005498] text-white' : 'hover:bg-gray-100'
-    }`}
-    onClick={onClick}
-  >
-    <User size={14} className='text-gray-400' />
-    <div className='flex-1'>
-      <div className='text-[15px] font-medium'>{suggestion.email}</div>
-      <div className='text-[10px] text-gray-500'>
-        {suggestion.firstName} {suggestion.lastName}
+  return (
+    <div
+      className={`px-3 py-2 cursor-pointer flex items-center gap-2 ${isSelected
+        ? 'bg-[#005498] text-white'
+        : 'hover:bg-gray-100'
+        }`}
+      onClick={onClick}
+    >
+      <User size={14} className='text-gray-400' />
+      <div className='flex-1'>
+        <div className='text-[15px] font-medium'>
+          {suggestion.displayName}
+        </div>
+        <div className='text-[12px] text-gray-500'>
+          {suggestion.phoneNumber}
+        </div>
       </div>
     </div>
-  </div>
-));
-
+  );
+});
 const NewContactContainer = ({ isOpen, onClose }) => {
   const [selectedMode, setSelectedMode] = useState('phoneNumber');
   const [userNameValue, setUserNameValue] = useState('');
   const [phoneNumberValue, setPhoneNumberValue] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [bio, setBio] = useState('');
+  const [profilePicture, setProfilePicture] = useState('');
   const [suggestions, setSuggestions] = useState([]);
+  const [selectedContact, setSelectedContact] = useState({});
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -74,15 +60,21 @@ const NewContactContainer = ({ isOpen, onClose }) => {
     }
 
     debounceTimerRef.current = setTimeout(async () => {
-      if (query.length >= 3 || (selectedMode === 'phone' && query.length === 10)) {
+      if (query.length >= 5) {
+        console.log(query)
         setLoading(true);
         try {
-          const results = await searchContacts(query);
-          setSuggestions(results);
+          const results = await getuserOnPhoneNumber({ phoneNumber: query });
+          const filteredResults = results.users.filter(user => user.displayName);
+          setSuggestions(filteredResults);
           setShowSuggestions(true);
         } catch (error) {
-          console.error('Search error:', error);
+          setShowSuggestions(true);
+          setUserNameValue('');
+          setBio('');
+          setProfilePicture('');
           setSuggestions([]);
+          setSelectedContact({});
         } finally {
           setLoading(false);
         }
@@ -106,54 +98,47 @@ const NewContactContainer = ({ isOpen, onClose }) => {
   }, [selectedMode, debouncedSearch]);
 
   const selectSuggestion = useCallback((suggestion) => {
-    setUserNameValue(suggestion.email);
-    setFirstName(suggestion.firstName);
-    setLastName(suggestion.lastName);
+    setSelectedContact(suggestion);
+    setUserNameValue(suggestion.displayName);
     setPhoneNumberValue(suggestion.phoneNumber);
+    setBio(suggestion.bio);
+    setProfilePicture(suggestion.profilePicture.filename);
     setShowSuggestions(false);
     setSelectedIndex(-1);
     (selectedMode === 'userName' ? userNameInputRef : phoneInputRef).current?.focus();
   }, [selectedMode]);
 
-  const handleKeyDown = useCallback((e) => {
-    if (!showSuggestions || suggestions.length === 0) return;
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setSelectedIndex(prev => prev < suggestions.length - 1 ? prev + 1 : 0);
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setSelectedIndex(prev => prev > 0 ? prev - 1 : suggestions.length - 1);
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (selectedIndex >= 0) {
-          selectSuggestion(suggestions[selectedIndex]);
-        }
-        break;
-      case 'Escape':
-        setShowSuggestions(false);
-        setSelectedIndex(-1);
-        break;
-    }
-  }, [showSuggestions, suggestions, selectedIndex, selectSuggestion]);
-
   const clearFields = useCallback(() => {
     setPhoneNumberValue('');
     setUserNameValue('');
-    setFirstName('');
-    setLastName('');
+    setBio('');
+    setProfilePicture('');
     setSuggestions([]);
+    setSelectedContact({});
     setShowSuggestions(false);
     (selectedMode === 'userName' ? userNameInputRef : phoneInputRef).current?.focus();
   }, [selectedMode]);
 
-  const handleModeChange = useCallback((mode) => {
-    setSelectedMode(mode);
-    clearFields();
-  }, [clearFields]);
+
+  const handleAddContact = async () => {
+    let payload = {
+      contactUserId: selectedContact._id,
+      sourceValue: selectedContact.phoneNumber,
+      sourceType: "phone"
+    }
+    try {
+      const response = await addNewContact(payload);
+      if (response.success) {
+        //
+      }
+    } catch (err) {
+      console.log(err)
+    } finally {
+      onClose();
+      clearFields();
+    }
+  }
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -176,8 +161,8 @@ const NewContactContainer = ({ isOpen, onClose }) => {
     };
   }, []);
 
-  const isAddDisabled = !userNameValue && !firstName;
-  const currentValue = selectedMode === 'userName' ? userNameValue : phoneNumberValue;
+  const isAddDisabled = !userNameValue;
+  const currentValue = phoneNumberValue;
   const shouldShowNoResults = showSuggestions && currentValue.length >= 2 && suggestions.length === 0 && !loading;
 
   if (!isOpen) return null;
@@ -194,29 +179,13 @@ const NewContactContainer = ({ isOpen, onClose }) => {
           <div className='text-[20px] text-[#000] font-normal'>New Contact</div>
 
           <div className="flex items-center justify-center border border-[#b1b0b0] bg-[#b1b0b0] rounded-full w-16 h-16 mx-auto">
-            <UserRound size={30} style={{ color: "#fff" }} />
-          </div>
+            {
+              profilePicture ? (<>
+                <img src={getStaticImageUrl(profilePicture)} alt="" className="w-full h-full object-cover rounded-full" />
+              </>) : <UserRound size={30} style={{ color: "#fff" }} />
+            }
 
-          {/* <div className='w-full h-[50px] mt-[10px] rounded-md p-[8px] pl-[12px] pr-[12px] border-1 border-[#bdbdbd] flex items-center justify-between gap-[10px]'>
-            <div
-              className={`flex items-center justify-center gap-[8px] text-[14px] font-[500] cursor-pointer p-[8px] rounded-sm w-[50%] ${
-                selectedMode === "userName" ? "bg-[#e0e0e0] text-[#000]" : "bg-[#ffffff] text-[#cdcdcd]"
-              }`}
-              onClick={() => handleModeChange("userName")}
-            >
-              <CircleUser size={18} />
-              User Name
-            </div>
-            <div
-              className={`flex items-center justify-center gap-[8px] text-[14px] font-[500] cursor-pointer p-[8px] rounded-sm w-[50%] ${
-                selectedMode === "phone" ? "bg-[#e0e0e0] text-[#000]" : "bg-[#ffffff] text-[#cdcdcd]"
-              }`}
-              onClick={() => handleModeChange("phone")}
-            >
-              <Smartphone size={18} />
-              Phone
-            </div>
-          </div> */}
+          </div>
 
           <div className='mt-1 relative'>
             <label className='text-[14px] font-[400] text-[#919191]'>
@@ -228,11 +197,10 @@ const NewContactContainer = ({ isOpen, onClose }) => {
                 type={selectedMode === 'phone' ? 'number' : 'text'}
                 value={currentValue}
                 onChange={(e) => handleInputChange(e.target.value, selectedMode)}
-                onKeyDown={handleKeyDown}
+                // onKeyDown={handleKeyDown}
                 placeholder={selectedMode === 'userName' ? 'Start typing username' : 'Enter phone number...'}
-                className={`px-3 pr-8 mt-[5px] bg-gray-100 text-gray-800 h-[40px] text-[15px] rounded border-b border-[#e0e0e0] focus:outline-none focus:ring-0 focus:border-b-2 focus:border-[#005498] w-full ${
-                  selectedMode === 'phone' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''
-                }`}
+                className={`px-3 pr-8 mt-[5px] bg-gray-100 text-gray-800 h-[40px] text-[15px] rounded border-b border-[#e0e0e0] focus:outline-none focus:ring-0 focus:border-b-2 focus:border-[#005498] w-full ${selectedMode === 'phone' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''
+                  }`}
                 autoComplete='off'
               />
 
@@ -283,11 +251,25 @@ const NewContactContainer = ({ isOpen, onClose }) => {
               type='text'
               value={selectedMode === "userName" ? phoneNumberValue : userNameValue}
               disabled
-              className='px-3 mt-[5px] bg-[#d9d9d9] text-gray-800 h-[40px] text-[15px] rounded border-b border-[#e0e0e0] focus:outline-none focus:ring-0 focus:border-b-2 w-full cursor-not-allowed'
+              placeholder='User Name'
+              className='px-3 mt-[5px] bg-[#e7e7e7] text-gray-800 h-[40px] text-[15px] rounded border-b border-[#e0e0e0] focus:outline-none focus:ring-0 focus:border-b-2 w-full cursor-not-allowed'
             />
           </div>
 
           <div className='mt-1'>
+            <label className='text-[14px] font-[400] text-[#919191]'>
+              User's Bio
+            </label>
+            <input
+              type='text'
+              value={bio}
+              disabled
+              placeholder='Bio'
+              className='px-3 mt-[5px] bg-[#e7e7e7] text-gray-800 h-[40px] text-[15px] rounded border-b border-[#e0e0e0] focus:outline-none focus:ring-0 focus:border-b-2 w-full cursor-not-allowed'
+            />
+          </div>
+
+          {/* <div className='mt-1'>
             <label className='text-[14px] font-[400] text-[#919191]'>First Name</label>
             <input
               type='text'
@@ -295,9 +277,9 @@ const NewContactContainer = ({ isOpen, onClose }) => {
               onChange={(e) => setFirstName(e.target.value)}
               className='px-3 mt-[5px] bg-gray-100 text-gray-800 h-[40px] text-[15px] rounded border-b border-[#e0e0e0] focus:outline-none focus:ring-0 focus:border-b-2 focus:border-[#005498] w-full'
             />
-          </div>
+          </div> */}
 
-          <div className='mt-1'>
+          {/* <div className='mt-1'>
             <label className='text-[14px] font-[400] text-[#919191]'>Last Name</label>
             <input
               type='text'
@@ -305,7 +287,7 @@ const NewContactContainer = ({ isOpen, onClose }) => {
               onChange={(e) => setLastName(e.target.value)}
               className='px-3 mt-[5px] bg-gray-100 text-gray-800 h-[40px] text-[15px] rounded border-b border-[#e0e0e0] focus:outline-none focus:ring-0 focus:border-b-2 focus:border-[#005498] w-full'
             />
-          </div>
+          </div> */}
 
           <div className='flex gap-2 mt-4'>
             <button
@@ -315,10 +297,11 @@ const NewContactContainer = ({ isOpen, onClose }) => {
               Cancel
             </button>
             <button
+              onClick={handleAddContact}
               className='flex-1 px-4 py-2 text-[15px] cursor-pointer bg-[#005498] text-white rounded-md hover:bg-[#004080] disabled:opacity-50 disabled:cursor-not-allowed'
               disabled={isAddDisabled}
             >
-              Add Contact
+              Add Friend
             </button>
           </div>
         </div>

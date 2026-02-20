@@ -16,6 +16,7 @@ import { logout } from '../store/slice/authSlice';
 import { useState } from 'react';
 import { AuthEvents } from '../sockets/events/auth';
 import Profile from '../components/Profile';
+import { UserRoundPlus } from 'lucide-react';
 
 
 const Sidebar = () => {
@@ -31,6 +32,10 @@ const Sidebar = () => {
         {
             icon: Chat,
             onClick: ()  => { console.log("clicked chat"); }
+        },
+        {
+            icon: UserRoundPlus,
+            onClick: ()  => { console.log("clicked new friends"); }
         },
         {
             icon: DonutLargeRoundedIcon,
