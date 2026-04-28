@@ -17,6 +17,7 @@ import { useState } from 'react';
 import { AuthEvents } from '../sockets/events/auth';
 import Profile from '../components/Profile';
 import { UserRoundPlus } from 'lucide-react';
+import { useCallback } from 'react';
 
 
 const Sidebar = () => {
@@ -28,30 +29,63 @@ const Sidebar = () => {
         icon: MenuIcon,
         onClick: () => dispatch(toggleMenuState())
     }];
-    const topFunctionalitiesGroupIcon = [
+
+    const triggerNewRequest = useCallback((setter, index) => {
+        setter(prev => prev.map((item, i) =>
+            i === index ? { ...item, showBadge: true, isNew: true } : item
+        ));
+    }, []);
+
+    const dismissGlow = useCallback((setter, index) => {
+        setter(prev => prev.map((item, i) =>
+            i === index ? { ...item, isNew: false } : item
+        ));
+    }, []);
+
+    const dismissBadge = useCallback((setter, index) => {
+        setter(prev => prev.map((item, i) =>
+            i === index ? { ...item, showBadge: false, isNew: false } : item
+        ));
+    }, []);
+
+    const [topFunctionalitiesGroupIcon, setTopFunctionalitiesGroupIcon] = useState([
         {
             icon: Chat,
-            onClick: ()  => { console.log("clicked chat"); }
+            onClick: () => { console.log("clicked chat"); },
         },
         {
             icon: UserRoundPlus,
-            onClick: ()  => { console.log("clicked new friends"); }
+            onClick: () => { console.log("clicked new friends"); },
+            showBadge: false,
+            isNew: false,
+            onGlowDismiss: () => dismissGlow(setTopFunctionalitiesGroupIcon, 1),
         },
         {
             icon: DonutLargeRoundedIcon,
-            onClick: ()  => { console.log("clicked status"); }
+            onClick: () => { console.log("clicked status"); },
+            onTriggerNewRequest: () => triggerNewRequest(setTopFunctionalitiesGroupIcon, 1),
         },
-    ];
-    const bottomChatGroupIcons = [
+    ]);
+
+    const [bottomChatGroupIcons, setBottomChatGroupIcons] = useState([
         {
             icon: Archive,
-            onClick: ()  => { console.log("clicked archive chat"); }
+            onClick: () => { console.log("clicked archive chat"); },
+            showBadge: false,
+            isNew: false,
+            onGlowDismiss: () => dismissGlow(setBottomChatGroupIcons, 0),
+            onTriggerNewRequest: () => triggerNewRequest(setBottomChatGroupIcons, 0),
         },
         {
             icon: Favorite,
-            onClick: ()  => { console.log("clicked favorite"); }
-        }
-    ];
+            onClick: () => { console.log("clicked favorite"); },
+            showBadge: false,
+            isNew: false,
+            onGlowDismiss: () => dismissGlow(setBottomChatGroupIcons, 1),
+            onTriggerNewRequest: () => triggerNewRequest(setBottomChatGroupIcons, 1),
+        },
+    ]);
+
     const bottomFunctionGroupIcons = [
         {
             icon: AccountCircleOutlinedIcon,
@@ -59,15 +93,15 @@ const Sidebar = () => {
         },
         {
             icon: Setting,
-            onClick: () =>  { console.log("clicked setting"); }
+            onClick: () => { console.log("clicked setting"); }
         },
         {
             icon: ExitToAppIcon,
-            onClick: () => { 
+            onClick: () => {
                 AuthEvents.logout();
-                dispatch(logout()); 
+                dispatch(logout());
                 dispatch(removeUerInfo());
-                console.log("clicked logout");                 
+                console.log("clicked logout");
             }
         }
     ];
@@ -93,7 +127,7 @@ const Sidebar = () => {
 
             {
                 profileModalOpen && <>
-                    <Profile isOpen={profileModalOpen} onClose={() => {setProfileModalOpen(false);}}/>
+                    <Profile isOpen={profileModalOpen} onClose={() => { setProfileModalOpen(false); }} />
                 </>
             }
 

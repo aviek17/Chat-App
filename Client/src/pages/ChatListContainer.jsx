@@ -6,6 +6,7 @@ import NewContactContainer from '../components/NewContact';
 import { ChatEvents } from '../sockets/events/chat';
 import { setSelectedUserInfo } from '../store/slice/selectedUserSlice';
 import { getBase64FromFile, getStaticImageUrl } from '../services/common.service';
+import { getContactList } from '../services/user.service';
 
 
 const formatDateTime = (datetimeStr) => {
@@ -98,13 +99,19 @@ const ChatListContainer = () => {
     };
 
     dispatch(setSelectedUserInfo(userInfo));
-
-
     ChatEvents.onReceivingUserStatus(onReceivingUserStatus);
-
     ChatEvents.getUserOnlineStatus({ userId: chatPartner._id });
+  }
 
-
+  const oprnNewContactModal = () => {
+    try{
+      console.log("Opening new contact modal");
+      setNewChatOpen(!newChatOpen);
+      const contactList = getContactList();
+      console.log("Contact List:", contactList);
+    }catch(err){
+      console.log("Error opening new contact modal:", err);
+    }
   }
 
   return (
@@ -119,7 +126,7 @@ const ChatListContainer = () => {
         </div>
         <div className="flex items-center space-x-2">
 
-          <button className="p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer" onClick={() => setNewChatOpen(!newChatOpen)} >
+          <button className="p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer" onClick={() => oprnNewContactModal()} >
             <UserPlus size={20} style={{ color: currentColors.text.secondary }} />
           </button>
 

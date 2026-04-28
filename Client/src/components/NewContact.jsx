@@ -40,6 +40,7 @@ const NewContactContainer = ({ isOpen, onClose }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [contactName, setContactName] = useState("");
 
   const userNameInputRef = useRef(null);
   const phoneInputRef = useRef(null);
@@ -103,6 +104,7 @@ const NewContactContainer = ({ isOpen, onClose }) => {
     setPhoneNumberValue(suggestion.phoneNumber);
     setBio(suggestion.bio);
     setProfilePicture(suggestion.profilePicture.filename);
+    setContactName('');
     setShowSuggestions(false);
     setSelectedIndex(-1);
     (selectedMode === 'userName' ? userNameInputRef : phoneInputRef).current?.focus();
@@ -115,16 +117,23 @@ const NewContactContainer = ({ isOpen, onClose }) => {
     setProfilePicture('');
     setSuggestions([]);
     setSelectedContact({});
+    setContactName('');
     setShowSuggestions(false);
     (selectedMode === 'userName' ? userNameInputRef : phoneInputRef).current?.focus();
   }, [selectedMode]);
 
 
   const handleAddContact = async () => {
+    if(!contactName){
+      alert("Contact name is mandatory");
+      return;
+    }
+    
     let payload = {
       contactUserId: selectedContact._id,
       sourceValue: selectedContact.phoneNumber,
-      sourceType: "phone"
+      sourceType: "phone",
+      name: contactName
     }
     try {
       const response = await addNewContact(payload);
@@ -253,6 +262,19 @@ const NewContactContainer = ({ isOpen, onClose }) => {
               disabled
               placeholder='User Name'
               className='px-3 mt-[5px] bg-[#e7e7e7] text-gray-800 h-[40px] text-[15px] rounded border-b border-[#e0e0e0] focus:outline-none focus:ring-0 focus:border-b-2 w-full cursor-not-allowed'
+            />
+          </div>
+
+          <div className='mt-1'>
+            <label className='text-[14px] font-[400] text-[#919191]'>
+              {"Contact Name"}
+            </label>
+            <input
+              type='text'
+              placeholder='Name'
+              className='px-3 mt-[5px] bg-gray-100 text-gray-800 h-[40px] text-[15px] rounded border-b border-[#e0e0e0] focus:outline-none focus:ring-0 focus:border-b-2 w-full cursor-not-allowed'
+              value={contactName}
+              onChange={e => { setContactName(e.target.value) }}
             />
           </div>
 

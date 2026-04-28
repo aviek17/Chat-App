@@ -65,3 +65,14 @@ export const addNewContact = async (contactData) => {
         throw error.response ? error.response.data : error.message;
     }
 }
+
+
+export const getContactList = async () => {
+    try {
+        console.log(API_USER.CONTACT_LIST, headers)
+        const response = await api.get(API_USER.CONTACT_LIST, headers);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error.message;
+    }
+}
