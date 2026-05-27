@@ -23,6 +23,7 @@ const allowedOrigins = [
   'http://localhost:3100',
   'http://localhost:5173',
   'http://192.168.29.48:3100',
+  'https://chat-app-one-gold-74.vercel.app',
   process.env.CLIENT_URL,        // production origin from env
 ].filter(Boolean);
 
