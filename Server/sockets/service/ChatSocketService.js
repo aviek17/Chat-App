@@ -1,29 +1,28 @@
-const ChatService = require('../../service/chat/ChatService');
+const ChatService = require('../../service/chat/ChatSocketService');
 const ChatRepository = require('../../repo/ChatRepo');
 const { validateObjectId, validateMessageContent } = require('../../validation/message');
 const log = require('../../utils/logger');
 
 class ChatSocketService {
-  constructor(io) {
+  constructor(io, { activeUsers, typingUsers, userRooms } = {}) {
     this.io = io;
     this.chatRepository = ChatRepository;
-    this.activeUsers = new Map(); // userId -> socketId
-    this.typingUsers = new Map(); // "senderId-receiverId" -> timestamp
-    this.userRooms = new Map(); // userId -> Set of room IDs for group chats
+    this.activeUsers = activeUsers ?? new Map();
+    this.typingUsers = typingUsers ?? new Map();
+    // this.userRooms   = userRooms   ?? new Map();
   }
 
-  // Initialize socket connection
-  initializeConnection(socket) {
-    console.log(`User connected: ${socket.id}`);
-    
-    // Import and use controller
-    const ChatSocketController = require('../controllers/ChatSocketController');
-    const controller = new ChatSocketController(this);
-    controller.initializeEventHandlers(socket);
+
+  start() {
+    setInterval(() => {
+      this.cleanupTypingIndicators();
+    }, 5000);
+    log.success('ChatSocketService started');
   }
-  
+
   // Add active user
   addActiveUser(userId, socketId) {
+    log.info(`Active user: ${userId} with socket ID: ${socketId}`);
     this.activeUsers.set(userId, socketId);
   }
 
@@ -52,7 +51,7 @@ class ChatSocketService {
       await this.chatRepository.updateUserOnlineStatus(userId, true);
 
       const recentChats = await ChatService.getRecentChats(userId);
-      
+
       socket.emit('authenticate', {
         message: 'Welcome to Talk Sphere',
         recentChats,
@@ -87,7 +86,7 @@ class ChatSocketService {
       // Validate message content using ChatService method
       const validatedContent = validateMessageContent(content);
 
-      if(!validatedContent){
+      if (!validatedContent) {
         socket.emit('error', { message: 'Invalid message content' });
         return;
       }
@@ -96,19 +95,17 @@ class ChatSocketService {
       const message = await ChatService.createMessage(senderId, receiverId, content);
 
       // Emit to sender (confirmation)
-      socket.emit('message_sent', { message : message.content });
-
+      socket.emit('message_sent', { message: message.content });
 
       const receiverSocketId = this.activeUsers.get(receiverId);
 
-      console.log("receiverSocketId",receiverSocketId)
       if (receiverSocketId) {
-        this.io.to(receiverSocketId).emit('message_received', { message : message.content });
+        this.io.to(receiverSocketId).emit('message_received', { message: message.content });
         await ChatService.markMessagesAsDelivered(senderId, receiverId);
         console.log(`Message delivered to ${receiverId}`);
-        socket.emit('message_delivered', { 
-          messageId: message._id, 
-          receiverId 
+        socket.emit('message_delivered', {
+          messageId: message._id,
+          receiverId
         });
       }
 
@@ -195,7 +192,7 @@ class ChatSocketService {
 
       // Mark messages as delivered using ChatService
       const modifiedCount = await ChatService.markMessagesAsDelivered(senderId, receiverId);
-      
+
       if (modifiedCount > 0) {
         // Notify sender about delivery
         const senderSocketId = this.activeUsers.get(senderId);
@@ -224,7 +221,7 @@ class ChatSocketService {
 
       // Mark messages as read using ChatService
       const modifiedCount = await ChatService.markMessagesAsRead(senderId, receiverId);
-      
+
       if (modifiedCount > 0) {
         // Notify sender about read status
         const senderSocketId = this.activeUsers.get(senderId);
@@ -263,10 +260,10 @@ class ChatSocketService {
       socket.emit('message_deleted', { messageId });
 
       // Notify the other user about message deletion
-      const otherUserId = deletedMessage.sender.toString() === userId 
-        ? deletedMessage.receiver.toString() 
+      const otherUserId = deletedMessage.sender.toString() === userId
+        ? deletedMessage.receiver.toString()
         : deletedMessage.sender.toString();
-      
+
       const otherUserSocketId = this.activeUsers.get(otherUserId);
       if (otherUserSocketId) {
         this.io.to(otherUserSocketId).emit('message_deleted', { messageId });
@@ -299,10 +296,10 @@ class ChatSocketService {
       socket.emit('attachment_deleted', { messageId });
 
       // Notify the other user about attachment deletion
-      const otherUserId = message.sender.toString() === userId 
-        ? message.receiver.toString() 
+      const otherUserId = message.sender.toString() === userId
+        ? message.receiver.toString()
         : message.sender.toString();
-      
+
       const otherUserSocketId = this.activeUsers.get(otherUserId);
       if (otherUserSocketId) {
         this.io.to(otherUserSocketId).emit('attachment_deleted', { messageId });
@@ -334,7 +331,7 @@ class ChatSocketService {
 
       // Get chat history using ChatService
       const messages = await ChatService.getChatHistory(userId, otherUserId, page, limit);
-      
+
       socket.emit('chat_history', {
         messages,
         otherUserId,
@@ -361,12 +358,30 @@ class ChatSocketService {
 
       // Get recent chats using ChatService
       const recentChats = await ChatService.getRecentChats(userId, limit);
-      
+
       socket.emit('recent_chats', { recentChats });
 
     } catch (error) {
       console.error('❌ Get recent chats error:', error);
       socket.emit('error', { message: 'Failed to get recent chats' });
+    }
+  }
+
+  // Handle new contact
+  async handleNewContact(userId, contactData, result) {
+    try {
+      const userSocketId = this.activeUsers.get(contactData?.contactUserId);
+      if (userSocketId) {
+        this.io.to(userSocketId).emit('new_contact_request', {
+          contact: {
+            requestFrom: userId?.displayName
+          },
+          contactInfo : result,
+          timestamp: Date.now()
+        });
+      }
+    } catch (error) {
+      console.error('Notify new contact error: ', error);
     }
   }
 
@@ -382,7 +397,7 @@ class ChatSocketService {
 
       // Get unread count using ChatService
       const unreadCount = await ChatService.getUnreadCount(userId);
-      
+
       socket.emit('unread_count', { unreadCount });
 
     } catch (error) {
@@ -404,7 +419,7 @@ class ChatSocketService {
 
       // Get unread count by partner using ChatService
       const unreadCount = await ChatService.getUnreadCountByPartner(userId, partnerId);
-      
+
       socket.emit('unread_count_by_partner', { partnerId, unreadCount });
 
     } catch (error) {
@@ -426,7 +441,7 @@ class ChatSocketService {
 
       // Get messages count using ChatService
       const count = await ChatService.getMessagesCount(userId, otherUserId);
-      
+
       socket.emit('messages_count', { otherUserId, count });
 
     } catch (error) {
@@ -448,7 +463,7 @@ class ChatSocketService {
 
       // Get messages by status using ChatService
       const messages = await ChatService.getMessagesByStatus(userId, status, page, limit);
-      
+
       socket.emit('messages_by_status', {
         messages,
         status,
@@ -475,7 +490,7 @@ class ChatSocketService {
 
       // Search messages using ChatService
       const messages = await ChatService.searchMessages(userId, searchTerm, page, limit);
-      
+
       socket.emit('search_results', {
         messages,
         searchTerm,
@@ -502,7 +517,7 @@ class ChatSocketService {
 
       // Get chat attachments using ChatService
       const attachments = await ChatService.getChatAttachments(userId, otherUserId, attachmentType, page, limit);
-      
+
       socket.emit('chat_attachments', {
         attachments,
         otherUserId,
@@ -530,7 +545,7 @@ class ChatSocketService {
 
       // Get attachment stats using ChatService
       const stats = await ChatService.getChatAttachmentStats(userId, otherUserId);
-      
+
       socket.emit('chat_attachment_stats', { otherUserId, stats });
 
     } catch (error) {
@@ -616,7 +631,7 @@ class ChatSocketService {
 
       // Join the room
       socket.join(chatRoomId);
-      
+
       // Track user rooms
       if (!this.userRooms.has(userId)) {
         this.userRooms.set(userId, new Set());
@@ -643,7 +658,7 @@ class ChatSocketService {
 
       // Leave the room
       socket.leave(roomId);
-      
+
       // Remove from user rooms tracking
       if (this.userRooms.has(userId)) {
         this.userRooms.get(userId).delete(roomId);
@@ -684,13 +699,13 @@ class ChatSocketService {
         this.activeUsers.delete(userId);
 
         // Clean up typing indicators
-        const typingKeys = Array.from(this.typingUsers.keys()).filter(key => 
+        const typingKeys = Array.from(this.typingUsers.keys()).filter(key =>
           key.startsWith(`${userId}-`)
         );
         typingKeys.forEach(key => this.typingUsers.delete(key));
 
         // Clean up user rooms
-        this.userRooms.delete(userId);
+        // this.userRooms.delete(userId);
 
         // Update user offline status
         await this.chatRepository.updateUserOnlineStatus(userId, false);
@@ -708,7 +723,7 @@ class ChatSocketService {
   async broadcastUserStatus(userId, status) {
     try {
       const contacts = await this.chatRepository.getUserContacts(userId);
-      
+
       contacts.forEach(contactId => {
         const contactSocketId = this.activeUsers.get(contactId);
         if (contactSocketId) {
@@ -760,7 +775,7 @@ class ChatSocketService {
     return this.activeUsers.size;
   }
 
-  isUserOnline({userId}) {
+  isUserOnline({ userId }) {
     return this.activeUsers.has(userId);
   }
 
@@ -772,13 +787,13 @@ class ChatSocketService {
   cleanupTypingIndicators() {
     const now = Date.now();
     const expiredKeys = [];
-    
+
     this.typingUsers.forEach((timestamp, key) => {
       if (now - timestamp > 5000) { // 5 seconds timeout
         expiredKeys.push(key);
       }
     });
-    
+
     expiredKeys.forEach(key => {
       this.typingUsers.delete(key);
       const [senderId, receiverId] = key.split('-');
@@ -792,12 +807,7 @@ class ChatSocketService {
     });
   }
 
-  // Start cleanup interval for typing indicators
-  startCleanupInterval() {
-    setInterval(() => {
-      this.cleanupTypingIndicators();
-    }, 5000); // Clean up every 5 seconds
-  }
+
 }
 
 module.exports = ChatSocketService;

@@ -1,9 +1,11 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { UserRound, CircleUser, Smartphone, X, User } from 'lucide-react';
 import { colors } from '../styles/theme';
-import { addNewContact, getuserOnPhoneNumber } from '../services/user.service';
-import { getBase64FromFile, getStaticImageUrl } from '../services/common.service';
+import { addNewContact, getContactList, getuserOnPhoneNumber } from '../services/user.service';
+import { generateCustomUid, getBase64FromFile, getStaticImageUrl } from '../services/common.service';
+import { addPermanentOutgoingFriendRequest, addTempOutgoingFriendRequest } from '../store/slice/friendSlice';
+import { setContacts } from '../store/slice/contactSlice';
 
 
 const SuggestionItem = React.memo(({ suggestion, isSelected, onClick }) => {
@@ -29,6 +31,8 @@ const SuggestionItem = React.memo(({ suggestion, isSelected, onClick }) => {
     </div>
   );
 });
+
+
 const NewContactContainer = ({ isOpen, onClose }) => {
   const [selectedMode, setSelectedMode] = useState('phoneNumber');
   const [userNameValue, setUserNameValue] = useState('');
@@ -41,6 +45,8 @@ const NewContactContainer = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [contactName, setContactName] = useState("");
+
+  const dispatch = useDispatch();
 
   const userNameInputRef = useRef(null);
   const phoneInputRef = useRef(null);
@@ -66,6 +72,7 @@ const NewContactContainer = ({ isOpen, onClose }) => {
         setLoading(true);
         try {
           const results = await getuserOnPhoneNumber({ phoneNumber: query });
+          console.log(results)
           const filteredResults = results.users.filter(user => user.displayName);
           setSuggestions(filteredResults);
           setShowSuggestions(true);
@@ -103,7 +110,7 @@ const NewContactContainer = ({ isOpen, onClose }) => {
     setUserNameValue(suggestion.displayName);
     setPhoneNumberValue(suggestion.phoneNumber);
     setBio(suggestion.bio);
-    setProfilePicture(suggestion.profilePicture.filename);
+    setProfilePicture(suggestion.avatar?.filename);
     setContactName('');
     setShowSuggestions(false);
     setSelectedIndex(-1);
@@ -123,22 +130,39 @@ const NewContactContainer = ({ isOpen, onClose }) => {
   }, [selectedMode]);
 
 
+
+
   const handleAddContact = async () => {
-    if(!contactName){
+    if (!contactName) {
       alert("Contact name is mandatory");
       return;
     }
-    
+
     let payload = {
-      contactUserId: selectedContact._id,
+      contactUserId: selectedContact.id,
       sourceValue: selectedContact.phoneNumber,
       sourceType: "phone",
-      name: contactName
+      name: contactName,
+      uid: generateCustomUid()
     }
+
+    let initialDummyContact = {
+      avatar: selectedContact.avatar ?? {},
+      contactId: payload.contactUserId,
+      displayName: selectedContact.displayName,
+      id: payload.uid,
+      phoneNumber: selectedContact.phoneNumber,
+      uid: selectedContact.uid,
+      username: selectedContact.username,
+      bio: selectedContact.bio
+    }
+
+    dispatch(addTempOutgoingFriendRequest(initialDummyContact));
+
     try {
       const response = await addNewContact(payload);
       if (response.success) {
-        //
+        dispatch(addPermanentOutgoingFriendRequest(response?.data));
       }
     } catch (err) {
       console.log(err)
@@ -272,7 +296,7 @@ const NewContactContainer = ({ isOpen, onClose }) => {
             <input
               type='text'
               placeholder='Name'
-              className='px-3 mt-[5px] bg-gray-100 text-gray-800 h-[40px] text-[15px] rounded border-b border-[#e0e0e0] focus:outline-none focus:ring-0 focus:border-b-2 w-full cursor-not-allowed'
+              className='px-3 mt-[5px] bg-gray-100 text-gray-800 h-[40px] text-[15px] rounded border-b border-[#e0e0e0] focus:outline-none focus:ring-0 focus:border-b-2 w-full'
               value={contactName}
               onChange={e => { setContactName(e.target.value) }}
             />

@@ -3,7 +3,8 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
     menuDrawerState: false,
     selectedNavigation: {
-        chat: false,
+        chat: true,
+        friend : false,
         archiveChat: false,
         story: false,
         starredMsg: false,

@@ -125,6 +125,20 @@ messageSchema.methods.markAsRead = function () {
 };
 
 
+messageSchema.statics.decryptContent = function (encryptedContent, iv) {
+  try {
+    const ivBuffer = Buffer.from(iv, 'hex');
+    const decipher = crypto.createDecipheriv(ALGORITHM, ENCRYPTION_KEY, ivBuffer);
+    let decrypted = decipher.update(encryptedContent, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  } catch (error) {
+    logger.error('Decryption error:', error);
+    return null;
+  }
+};
+
+
 // Ensure virtual fields are included in JSON
 messageSchema.set('toJSON', { virtuals: true });
 messageSchema.set('toObject', { virtuals: true });

@@ -24,28 +24,21 @@ const httpAuthMiddleware = async (req, res, next) => {
                 id: decoded.id,
                 uid: decoded.uid,
                 email: decoded.email,
-                username: decoded.username
+                username: decoded.username,
+                displayName : decoded.displayName
             };
             req.userId = decoded.uid;
         }
 
+
         // Handle token refresh for HTTP responses
         if (refreshed && newToken) {
             res.setHeader('X-New-Token', newToken);
-
-            // Update cookie if using cookie-based auth
-            if (req.cookies.token) {
-                res.cookie('token', newToken, {
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === 'production',
-                    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-                    sameSite: 'strict'
-                });
-            }
         }
 
         next();
     } catch (error) {
+        console.log(error)
         logger.error('HTTP Auth Error:', error);
         error.statusCode = 401;
         error.message = 'Invalid token';

@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { toggleMenuState } from '../store/slice/menuDrawerSlice';
+import { changeNavigationState, toggleMenuState } from '../store/slice/menuDrawerSlice';
 import { Divider, Drawer } from '@mui/material';
 import Logo from "../assets/Logo_Nobg.png"
 import Chat from '../BoxIcons/ChatIcons';
@@ -12,14 +12,25 @@ import MenuIcon from '../BoxIcons/MenuIcon';
 import AccountCircleOutlinedIcon from "../BoxIcons/AccountCircleOutlinedIcon";
 import ExitToAppIcon from '../BoxIcons/ExitToApplication';
 import { UserRoundPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const MenuDrawer = () => {
+    const navigate = useNavigate();
     const menuState = useSelector(state => state.navigation?.menuDrawerState);
+    const navigationState = useSelector(state => state.navigation?.selectedNavigation);
     const dispatch = useDispatch();
 
 
     const onMenuClick = () => {
         dispatch(toggleMenuState());
+    }
+
+    const onPageRouteChange = (pageRoute) => {
+        navigate(pageRoute);
+    }
+
+    const onChangeNavigationState = (navKey) => {
+        dispatch(changeNavigationState(navKey));
     }
 
     return (
@@ -43,11 +54,11 @@ const MenuDrawer = () => {
             >
                 <div className='w-[320px] h-full p-[5px]'>
                     <div className='relative h-[60px]'><img src={Logo} className="h-[50px] w-[150px] absolute left-[5px] top-[5px]" /></div>
-                    <div style={{height : 'calc(100vh - 65px)'}} className='flex flex-col justify-between'>
+                    <div style={{ height: 'calc(100vh - 65px)' }} className='flex flex-col justify-between'>
                         <div className='flex flex-col gap-2.5'>
                             <MenuIconDetails Icon={MenuIcon} />
-                            <MenuIconDetails Icon={Chat} label='Chat' statusVal={10} selected />
-                            <MenuIconDetails Icon={UserRoundPlus} label='New Friends' statusVal={10} />
+                            <MenuIconDetails Icon={Chat} label='Chat' statusVal={10} selected={navigationState.chat} onClick={()=>{onPageRouteChange("/"); onChangeNavigationState("chat")}}/>
+                            <MenuIconDetails Icon={UserRoundPlus} label='Friends' statusVal={null} selected={navigationState.friend} onClick={()=>{onPageRouteChange("/contact"); onChangeNavigationState("friend") }}/>
                             <MenuIconDetails Icon={DonutLargeRoundedIcon} label='Status' hoverReqd statusSymbol />
                         </div>
                         <div className='mt-[15px] flex flex-col gap-1.5 mb-[15px] items-center'>
@@ -69,7 +80,7 @@ export default memo(MenuDrawer)
 
 
 
-const MenuIconDetails = ({ Icon = Chat, label = "", statusVal = null, selected = false, hoverReqd = true, statusSymbol = false }) => {
+const MenuIconDetails = ({ Icon = Chat, label = "", statusVal = null, selected = false, hoverReqd = true, statusSymbol = false, onClick = () => { } }) => {
     const dispatch = useDispatch();
     const navigate = () => {
         dispatch(toggleMenuState());
@@ -83,7 +94,12 @@ const MenuIconDetails = ({ Icon = Chat, label = "", statusVal = null, selected =
                 ${label ? 'w-full' : 'w-fit'}`
                 }
 
-                onClick={navigate}
+                onClick={
+                    () => {
+                        onClick();
+                        navigate();
+                    }
+                }
             >
                 {
                     selected && <div className='absolute inset-y-0 left-0 w-[3px] bg-[#005498] rounded-tl-[6px] rounded-bl-[6px]'></div>

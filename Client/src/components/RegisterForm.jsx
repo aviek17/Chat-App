@@ -10,6 +10,7 @@ import ErrorModal from './ErrorModal.jsx';
 import { signup } from '../services/user.service.js';
 import { useDispatch } from 'react-redux';
 import { setToken } from '../store/slice/authSlice.js';
+import { setProfilePhotoFileName, setUserInfo } from '../store/slice/userInfoSlice.js';
 
 
 const RegisterForm = () => {
@@ -93,12 +94,16 @@ const RegisterForm = () => {
         try {
             const response = await signup(formData);
             if (response.token) {
+                localStorage.setItem('token', response.token);
                 dispatch(setToken(response.token));
-                setShowSuccessModal(true);
+                dispatch(setUserInfo(response.user));
+                dispatch(setProfilePhotoFileName(response?.user?.profilePicture));
+                navigate("/");
+
             }
 
         } catch (error) {
-             console.error('Authentication error:', error);
+            console.error('Authentication error:', error);
             showError(`Authentication error:  ${error.message}`);
             setErrors({ general: 'An error occurred. Please try again.' });
         } finally {

@@ -23,3 +23,11 @@ export const getBase64FromFile = async (file) => {
 export const getStaticImageUrl = (filename) => {
     return baseUrl + API_USER.FETCH_PROFILE_PIC + filename;
 }
+
+
+export const generateCustomUid = () => {
+    const datePart = Date.now().toString().slice(-8);
+    const randomPart = Math.random().toString(16).substring(2, 8);
+
+    return `${randomPart}${datePart}`;
+}

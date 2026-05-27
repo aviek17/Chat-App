@@ -3,6 +3,7 @@ const Message = require('../models/chats/PrivateChat/privateMessage');
 const User = require('../models/User');
 const { ObjectId } = require('mongoose').Types;
 const crypto = require('crypto');
+const UserContact = require("../models/chats/PrivateChat/userContact");
 
 
 const ENCRYPTION_KEY = Buffer.from(process.env.MESSAGE_ENCRYPTION_KEY, 'hex');
@@ -25,8 +26,6 @@ function decryptContent(encryptedContent, iv) {
         return null;
     }
 }
-
-
 
 class ChatRepository {
 
@@ -336,24 +335,36 @@ class ChatRepository {
                         as: 'userInfo'
                     }
                 },
-                // {
-                //     $lookup: {
-                //         from: 'messageattachments',
-                //         localField: 'lastMessage.attachment',
-                //         foreignField: '_id',
-                //         as: 'lastMessage.attachmentInfo'
-                //     }
-                // },
+                {
+                    $lookup: {
+                        from: "profilephotos",
+                        let: { chatPartnerId: "$_id" },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: {
+                                        $and: [
+                                            { $eq: ["$userId", "$$chatPartnerId"] },
+                                            { $eq: ["$isActive", true] }
+                                        ]
+                                    }
+                                }
+                            },
+                            { $sort: { createdAt: -1 } }, // latest active photo
+                            { $limit: 1 }
+                        ],
+                        as: "profilePic"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$profilePic",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
                 {
                     $unwind: '$userInfo'
                 },
-                // {
-                //     $addFields: {
-                //         'lastMessage.attachmentInfo': {
-                //             $arrayElemAt: ['$lastMessage.attachmentInfo', 0]
-                //         }
-                //     }
-                // },
                 {
                     $project: {
                         chatPartnerId: '$_id',
@@ -364,7 +375,8 @@ class ChatRepository {
                             avatar: '$userInfo.avatar',
                             userName: '$userInfo.username',
                             bio: '$userInfo.bio',
-                            phoneNo: '$userInfo.phoneNumber'
+                            phoneNo: '$userInfo.phoneNumber',
+                            profilePicture: '$profilePic.filename'
                         },
                         lastMessage: {
                             _id: '$lastMessage._id',
@@ -600,6 +612,156 @@ class ChatRepository {
         } catch (error) {
             throw new Error(`Failed to search messages: ${error.message}`);
         }
+    }
+
+    //User Display Message
+    async getUserDisplayMessage(userId) {
+
+        const contacts = await UserContact.find({
+            userId: new ObjectId(userId),
+            isFriend: true
+        }).select('contactUserId');
+
+        if (!contacts.length) return {};
+
+        const contactIds = contacts.map(c => c.contactUserId);
+
+        const messages = await Message.aggregate([
+            {
+                $match: {
+                    isDeleted: false,
+                    $or: [
+                        { sender: new ObjectId(userId), receiver: { $in: contactIds } },
+                        { receiver: new ObjectId(userId), sender: { $in: contactIds } }
+                    ]
+                }
+            },
+            {
+                $addFields: {
+                    chatPartner: {
+                        $cond: {
+                            if: { $eq: ['$sender', new ObjectId(userId)] },
+                            then: '$receiver',
+                            else: '$sender'
+                        }
+                    }
+                }
+            },
+            { $sort: { createdAt: -1 } },
+            {
+                $group: {
+                    _id: '$chatPartner',
+                    lastMessageId: { $first: '$_id' }   // only grab the ID
+                }
+            }
+        ]);
+
+        if (!messages.length) return {};
+
+        // Fetch actual Mongoose documents using IDs — virtuals work on documents
+        const lastMessageIds = messages.map(m => m.lastMessageId);
+
+        const messageDocs = await Message.find({
+            _id: { $in: lastMessageIds }
+        });                                        // no .lean() — virtuals need full doc
+
+        // Map messageId → document for quick lookup
+        const docMap = {};
+        messageDocs.forEach(doc => {
+            docMap[doc._id.toString()] = doc;
+        });
+
+        // Build result
+        const result = {};
+
+        messages.forEach(m => {
+            const contactId = m._id.toString();
+            const doc = docMap[m.lastMessageId.toString()];
+
+            if (!doc) return;
+
+            result[contactId] = {
+                messages: [
+                    {
+                        messageContent: doc.content,      // ← virtual handles decryption
+                        sender: doc.sender,
+                        receiver: doc.receiver,
+                        time: doc.createdAt,
+                        status: doc.status
+                    }
+                ]
+            };
+        });
+
+        return result;
+
+    }
+
+    async getUserLastMessages(userId) {
+        const contacts = await UserContact.find({
+            userId: new ObjectId(userId),
+            isFriend: true,
+            isBlocked: false
+        }).select('contactUserId');
+
+        if (!contacts.length) return {};
+
+        const contactIds = contacts.map(c => c.contactUserId);
+
+        const messages = await Message.aggregate([
+            {
+                $match: {
+                    isDeleted: false,
+                    $or: [
+                        { sender: new ObjectId(userId), receiver: { $in: contactIds } },
+                        { receiver: new ObjectId(userId), sender: { $in: contactIds } }
+                    ]
+                }
+            },
+            {
+                $addFields: {
+                    chatPartner: {
+                        $cond: {
+                            if: { $eq: ['$sender', new ObjectId(userId)] },
+                            then: '$receiver',
+                            else: '$sender'
+                        }
+                    }
+                }
+            },
+            { $sort: { createdAt: -1 } },
+            {
+                $group: {
+                    _id: '$chatPartner',
+                    messages: { $push: '$$ROOT' }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    contactUserId: '$_id',
+                    messages: { $slice: ['$messages', 100] }
+                }
+            }
+        ]);
+
+        const result = {};
+
+        messages.forEach(chat => {
+            const contactId = chat.contactUserId.toString();
+
+            result[contactId] = {
+                messages: chat.messages.map(msg => ({
+                    messageContent: Message.decryptContent(msg.encryptedContent, msg.iv), 
+                    sender: msg.sender,
+                    receiver: msg.receiver,
+                    time: msg.createdAt,
+                    status: msg.status
+                }))
+            };
+        });
+
+        return result;
     }
 }
 

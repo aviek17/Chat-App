@@ -1,197 +1,187 @@
 const mongoose = require('mongoose');
 const logger = require("../../../utils/logger");
 
-const userContactSchema = new mongoose.Schema({
+const contactSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    contacts: [
-        {
-            user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-            userNickName : { 
-                firstName : { type: String, required: true, trim: true },
-                lastName : { type: String, required: true, trim: true }
-            },
-            addedBy: {
-                source: {
-                    type: String,
-                    enum: ['phone', 'email', 'username'],
-                    required: true
-                },
-                value: {
-                    type: String,
-                    required: true,
-                    trim: true
-                }
-            },
-            isPending: {
-                type: Boolean,
-                default: true
-            },
-            isFavorite: {
-                type: Boolean,
-                default: false
-            },
-            isBlocked: {
-                type: Boolean,
-                default: false
-            },
-            isArchived: {
-                type: Boolean,
-                default: false
-            },
-            isMuted: {
-                type: Boolean,
-                default: false
-            },
-            addedAt: { type: Date, default: Date.now },
-        }
-    ],
-
-}, {
-    timestamps: true
-})
+    requestSentBy: {
+        type: String,
+        trim: true,
+        required : true
+    },
+    contactUserId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    contactNickname: {
+        type: String,
+        trim: true
+    },
+    addedBy: {
+        source: { type: String, enum: ['phone', 'email', 'username'], required: true },
+        value: { type: String, required: true, trim: true }
+    },
+    isPending: { type: Boolean, default: true },
+    isFavorite: { type: Boolean, default: false },
+    isBlocked: { type: Boolean, default: false },
+    isArchived: { type: Boolean, default: false },
+    isMuted: { type: Boolean, default: false },
+    isFriend: { type: Boolean, default: false },
+    addedAt: { type: Date, default: Date.now }
+}, { timestamps: true });
 
 
+contactSchema.index({ userId: 1, contactUserId: 1 }, { unique: true });
 
-// Indexes for efficient queries
-userContactSchema.index({ userId: 1 });
-userContactSchema.index({ 'contacts.user': 1 });
-userContactSchema.index({ userId: 1, 'contacts.isBlocked': 1 });
-userContactSchema.index({ userId: 1, 'contacts.isFavorite': 1 });
+contactSchema.index({ userId: 1, isPending: 1 });
+contactSchema.index({ userId: 1, isBlocked: 1 });
+contactSchema.index({ userId: 1, isFavorite: 1 });
+contactSchema.index({ userId: 1, isArchived: 1 });
+contactSchema.index({ 'addedBy.source': 1, 'addedBy.value': 1 });
+
+
+// method to add new user in the db if not exists
+contactSchema.statics.ensureUserExists = async function (userId) {
+    const User = mongoose.model('User');
+    return await User.findOneAndUpdate(
+        { _id: userId },
+        { $setOnInsert: { _id: userId } },
+        { new: true, upsert: true }
+    );
+};
 
 
 // method to add friend for sender
-userContactSchema.methods.addContact = function (contactData) {
+contactSchema.statics.sendContactRequest = async function (userData) {
     const {
-        contactUserId,
+        senderUserId,
+        receiverUserId,
         sourceType,
-        sourceValue
-    } = contactData;
+        sourceValue,
+        senderNickname,
+        receiverNickname,
+        senderUserName
+    } = { ...userData };
 
-    const existingContact = this.contacts.find(
-        contact => contact.user.toString() === contactUserId.toString()
-    );
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    if (existingContact) {
-        logger.error('Contact already exists:', contactUserId);
-        throw new Error('Contact already exists');
+    try {
+        // Row for User A — they sent the request, so not pending for them
+        const senderRow = await this.findOneAndUpdate(
+            { userId: senderUserId, contactUserId: receiverUserId },
+            {
+                $setOnInsert: {
+                    userId: senderUserId,
+                    contactUserId: receiverUserId,
+                    requestSentBy : senderUserName,
+                    contactNickname: senderNickname || null,
+                    addedBy: { source: sourceType, value: sourceValue },
+                    isPending: false,
+                    addedAt: new Date()
+                }
+            },
+            { new: true, upsert: true, session, setDefaultsOnInsert: true }
+        );
+
+        // Row for User B — they received the request, so it is pending for them
+        const receiverRow = await this.findOneAndUpdate(
+            { userId: receiverUserId, contactUserId: senderUserId },
+            {
+                $setOnInsert: {
+                    userId: receiverUserId,
+                    contactUserId: senderUserId,
+                    requestSentBy : senderUserName,
+                    contactNickname: receiverNickname || null,
+                    addedBy: { source: sourceType, value: sourceValue },
+                    isPending: true,
+                    addedAt: new Date()
+                }
+            },
+            { new: true, upsert: true, session, setDefaultsOnInsert: true }
+        );
+
+        await session.commitTransaction();
+        logger.info(`Contact request sent: ${senderUserId} → ${receiverUserId}`);
+        return { senderRow, receiverRow };
+
+    } catch (err) {
+        await session.abortTransaction();
+        logger.error('sendContactRequest failed:', err);
+        throw err;
+    } finally {
+        session.endSession();
     }
-
-    this.contacts.push({
-        user: contactUserId,
-        addedBy: {
-            source: sourceType,
-            value: sourceValue
-        },
-        addedAt: new Date()
-    });
-
-    return this.save();
 };
 
 
-//method to add friends for both sender and receiver
-userContactSchema.methods.addMutualContact = async function (contactData) {
-    const {
-        contactUserId,
-        sourceType,
-        sourceValue
-    } = contactData;
 
-    const existingContact = this.contacts.find(
-        contact => contact.user.toString() === contactUserId.toString()
-    );
+// find contacts by source type for a particular user
+contactSchema.statics.getContactsBySource = async function (userId, sourceType) {
+    return await this.find({
+        userId,
+        'addedBy.source': sourceType
+    }).populate('contactUserId', 'name email phone username');
+};
 
-    if (existingContact) {
-        logger.error('Contact already exists:', contactUserId);
-        throw new Error('Contact already exists');
-    }
 
-    this.contacts.push({
-        user: contactUserId,
-        addedBy: {
-            source: sourceType,
-            value: sourceValue
-        },
-        addedAt: new Date()
-    });
+// find contacts for user by source type
+contactSchema.statics.findContactBySource = async function (userId, sourceType, sourceValue) {
+    return await this.findOne({
+        userId,
+        'addedBy.source': sourceType,
+        'addedBy.value': sourceValue
+    }).populate('contactUserId', 'name email phone username');
+};
 
-    await this.save();
 
-    const UserContact = this.constructor;
-    let reverseContactDoc = await UserContact.findOne({ userId: contactUserId });
 
-    if (!reverseContactDoc) {
-        reverseContactDoc = new UserContact({ userId: contactUserId, contacts: [] });
-    }
-
-    const reverseExists = reverseContactDoc.contacts.find(
-        contact => contact.user.toString() === this.userId.toString()
-    );
-
-    if (!reverseExists) {
-        reverseContactDoc.contacts.push({
-            user: this.userId,
-            addedBy: {
-                source: reverseSourceType || 'auto_added',
-                value: reverseSourceValue || 'mutual_contact'
-            },
-            addedAt: new Date()
+// getting pending contacts and added contacts for a user
+async function fetchContacts(Model, userId, isPending) {
+    const contacts = await Model.find({ userId, isPending })
+        .sort({ addedAt: -1 })
+        .populate({
+            path: 'contactUserId',
+            select: 'name email username profilePicture',
+            populate: {
+                path: 'profilePicture',
+                select: 'path url filename storageType',
+            }
         });
-        await reverseContactDoc.save();
-    }
 
-
-    return this;
+    return contacts.map(contact => {
+        const user = contact.contactUserId;
+        const pic = user.profilePicture;
+        return {
+            contactId: contact._id,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                username: user.username,
+                ...pic
+            }
+        };
+    });
 }
 
 
+contactSchema.statics.getPendingContacts = function (userId) {
+    return fetchContacts(this, userId, true);
+};
 
-userContactSchema.methods.findContactBySource = function (sourceType, sourceValue) {
-    return this.contacts.find(contact =>
-        contact.addedBy.source === sourceType &&
-        contact.addedBy.value === sourceValue
-    );
+contactSchema.statics.getContacts = function (userId) {
+    return fetchContacts(this, userId, false);
 };
 
 
-userContactSchema.methods.getContactsBySource = function (sourceType) {
-    return this.contacts.filter(contact =>
-        contact.addedBy.source === sourceType
-    );
-};
-
-
-userContactSchema.methods.toggleBlockContact = function (contactUserId, block = true) {
-    const contact = this.contacts.find(
-        c => c.user.toString() === contactUserId.toString()
-    );
-
-    if (!contact) {
-        logger.error('Contact not found: ', contactUserId);
-        throw new Error('Contact not found');
-    }
-
-    contact.isBlocked = block;
-    return this.save();
-};
+module.exports = mongoose.model('UserContact', contactSchema);
 
 
 
-userContactSchema.methods.updateLastInteraction = function (contactUserId) {
-    const contact = this.contacts.find(
-        c => c.user.toString() === contactUserId.toString()
-    );
 
-    if (contact) {
-        contact.lastInteraction = new Date();
-        return this.save();
-    }
-};
-
-
-module.exports = mongoose.model('UserContact', userContactSchema);
 

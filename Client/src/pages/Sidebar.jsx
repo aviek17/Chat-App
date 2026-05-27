@@ -18,11 +18,20 @@ import { AuthEvents } from '../sockets/events/auth';
 import Profile from '../components/Profile';
 import { UserRoundPlus } from 'lucide-react';
 import { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { persistor } from '../store';
+import { useEffect } from 'react';
+import { UserEvents } from '../sockets/events/user';
+import { addIncomingFriendRequest } from '../store/slice/friendSlice';
 
 
 const Sidebar = () => {
-
+    const navigate = useNavigate();
     const [profileModalOpen, setProfileModalOpen] = useState(false);
+
+    const openPageHandler = (pageRoute) => {
+        navigate(pageRoute);
+    }
 
     const dispatch = useDispatch();
     const topGroupIcons = [{
@@ -30,40 +39,44 @@ const Sidebar = () => {
         onClick: () => dispatch(toggleMenuState())
     }];
 
-    const triggerNewRequest = useCallback((setter, index) => {
-        setter(prev => prev.map((item, i) =>
-            i === index ? { ...item, showBadge: true, isNew: true } : item
-        ));
-    }, []);
-
-    const dismissGlow = useCallback((setter, index) => {
-        setter(prev => prev.map((item, i) =>
-            i === index ? { ...item, isNew: false } : item
-        ));
-    }, []);
-
-    const dismissBadge = useCallback((setter, index) => {
-        setter(prev => prev.map((item, i) =>
-            i === index ? { ...item, showBadge: false, isNew: false } : item
-        ));
-    }, []);
+    const handleContactClick = () => {
+        setTopFunctionalitiesGroupIcon(prev =>
+            prev.map(item => {
+                if (
+                    item.id === "contact" &&
+                    item.active === true
+                ) {
+                    return {
+                        ...item,
+                        active: false
+                    };
+                }
+                return item;
+            })
+        );
+        openPageHandler("/contact");
+    };
 
     const [topFunctionalitiesGroupIcon, setTopFunctionalitiesGroupIcon] = useState([
         {
+            id: "chat",
             icon: Chat,
-            onClick: () => { console.log("clicked chat"); },
+            active: true,
+            onClick: () => {
+                openPageHandler("/");
+            },
         },
         {
+            id: "contact",
             icon: UserRoundPlus,
-            onClick: () => { console.log("clicked new friends"); },
-            showBadge: false,
-            isNew: false,
-            onGlowDismiss: () => dismissGlow(setTopFunctionalitiesGroupIcon, 1),
+            onClick: handleContactClick,
+            active: false,
         },
         {
+            id: "status",
             icon: DonutLargeRoundedIcon,
             onClick: () => { console.log("clicked status"); },
-            onTriggerNewRequest: () => triggerNewRequest(setTopFunctionalitiesGroupIcon, 1),
+            active: false,
         },
     ]);
 
@@ -71,40 +84,77 @@ const Sidebar = () => {
         {
             icon: Archive,
             onClick: () => { console.log("clicked archive chat"); },
-            showBadge: false,
-            isNew: false,
-            onGlowDismiss: () => dismissGlow(setBottomChatGroupIcons, 0),
-            onTriggerNewRequest: () => triggerNewRequest(setBottomChatGroupIcons, 0),
+            active: false,
         },
         {
             icon: Favorite,
             onClick: () => { console.log("clicked favorite"); },
-            showBadge: false,
-            isNew: false,
-            onGlowDismiss: () => dismissGlow(setBottomChatGroupIcons, 1),
-            onTriggerNewRequest: () => triggerNewRequest(setBottomChatGroupIcons, 1),
+            active: false,
         },
     ]);
 
     const bottomFunctionGroupIcons = [
         {
             icon: AccountCircleOutlinedIcon,
-            onClick: () => { setProfileModalOpen(true); }
+            onClick: () => { setProfileModalOpen(true); },
+            active: false,
+
         },
         {
             icon: Setting,
-            onClick: () => { console.log("clicked setting"); }
+            onClick: () => { console.log("clicked setting"); },
+            active: false,
         },
         {
             icon: ExitToAppIcon,
-            onClick: () => {
+            onClick: async () => {
                 AuthEvents.logout();
                 dispatch(logout());
+                await persistor.purge()
                 dispatch(removeUerInfo());
+                localStorage.clear();
+                navigate("/login");
                 console.log("clicked logout");
             }
         }
     ];
+
+
+    useEffect(() => {
+        const handleNewContactRequest = (data) => {
+            console.log(
+                "Received new contact request:",
+                data
+            );
+            if (data?.contactInfo) {
+                const contact =
+                    Object.values(data.contactInfo)[0];
+                dispatch(
+                    addIncomingFriendRequest(contact)
+                );
+            }
+
+            const topGroupIcons = topFunctionalitiesGroupIcon?.map(item => {
+                if (item.id === "contact") {
+                    return {
+                        ...item,
+                        active: true
+                    }
+                }
+
+                return item;
+            })
+
+            setTopFunctionalitiesGroupIcon(topGroupIcons);
+
+        }
+
+        UserEvents.onReceivingNewContact(handleNewContactRequest);
+
+        return () => {
+            UserEvents.removeReceivingNewContact(handleNewContactRequest);
+        }
+    }, [dispatch, topFunctionalitiesGroupIcon])
 
 
 

@@ -6,6 +6,12 @@ import { useEffect, useState } from 'react'
 import { useSocket } from '../sockets/hooks/useSocket'
 import { AuthEvents } from '../sockets/events/auth'
 import { setAllChatList } from '../store/slice/chatListSlice'
+import { Outlet } from 'react-router-dom'
+import { useAppInit } from '../hooks/useAppInit'
+import { UserEvents } from '../sockets/events/user'
+import { setContacts } from '../store/slice/contactSlice'
+import { getContactList } from '../services/user.service'
+import { useCommonApi } from '../hooks/useCommonApi'
 
 const MainLayout = () => {
     const dispatch = useDispatch();
@@ -13,6 +19,16 @@ const MainLayout = () => {
     const userInfo = useSelector(state => state?.user?.userInfo);
     const [authAttempted, setAuthAttempted] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    const { initDone, initProgress, initText, initError } = useAppInit(isAuthenticated);
+
+    const { getUpdatedContactData, updatedUserDisplayMessage } = useCommonApi();
+
+    const handleAcceptRequest = async (data) => {
+        await getUpdatedContactData();
+        await updatedUserDisplayMessage(data);
+    };
+
 
     useEffect(() => {
 
@@ -29,8 +45,6 @@ const MainLayout = () => {
 
 
         const handleAuthSuccess = (data) => {
-            console.log("Authentication successfull:", data);
-            console.log(data.recentChats)
             dispatch(setAllChatList(data.recentChats || []));
             setIsAuthenticated(true);
             setAuthAttempted(true);
@@ -58,15 +72,19 @@ const MainLayout = () => {
         AuthEvents.onAuthenticationError(handleAuthError);
         AuthEvents.onGeneralError(handleGeneralError);
 
+
         setTimeout(() => {
             if (isConnected && userInfo?.id && !authAttempted) {
                 AuthEvents.authenticate({ userId: userInfo.id });
                 setAuthAttempted(true);
+                //Get updated contact data after accepting or rejecting the request
+                UserEvents.onAcceptingRequest(handleAcceptRequest);
             }
         }, 100);
 
         return () => {
             AuthEvents.removeAuthListeners();
+            UserEvents.removeAcceptingRequest(handleAcceptRequest);
         };
 
     }, [isConnected, userInfo?.id, connectionError]);
@@ -78,7 +96,10 @@ const MainLayout = () => {
             setIsAuthenticated(false);
             setAuthAttempted(false);
         }
+
+
     }, [isConnected]);
+
 
     // Show connection status for debugging
     const debugInfo = getDebugInfo();
@@ -86,7 +107,7 @@ const MainLayout = () => {
     return (
         <div className='bg-[#f3f3f3] h-screen w-full flex flex-col overflow-hidden'>
             {/* Debug info - remove in production */}
-            <div style={{
+            {/* <div style={{
                 position: 'fixed',
                 top: '50px',
                 right: '10px',
@@ -108,12 +129,26 @@ const MainLayout = () => {
                 <div>🏪 Auth Status: {AuthEvents.getAuthStatus() ? '✅' : '❌'}</div>
                 {connectionError && <div>❌ Error: {connectionError.message}</div>}
                 <div>📋 Events: {debugInfo.registeredEvents.join(', ') || 'none'}</div>
-            </div>
+            </div> */}
+
+
+            {!initDone && (
+                <div className='fixed inset-0 bg-white z-50 flex flex-col items-center justify-center gap-4'>
+                    <p className='text-[16px] text-gray-700'>{initText || 'Connecting...'}</p>
+                    <div className='w-64 h-1.5 bg-gray-100 rounded-full overflow-hidden'>
+                        <div
+                            className='h-full bg-[#005498] rounded-full transition-all duration-300 ease-out'
+                            style={{ width: `${initProgress}%` }}
+                        />
+                    </div>
+                    <p className='text-[14px] text-gray-400'>{initProgress}%</p>
+                </div>
+            )}
 
             <Header />
             <div className='flex flex-row flex-1'>
                 <Sidebar />
-                <MainContainer />
+                <Outlet />
             </div>
         </div>
     )

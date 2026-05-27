@@ -43,9 +43,6 @@ class ChatSocketController {
     // Status events
     socket.on('update_status', (data) => this.handleUpdateStatus(socket, data));
     
-    // Connection events
-    socket.on('disconnect', () => this.handleDisconnect(socket));
-    
     // Error handling
     socket.on('error', (error) => this.handleSocketError(socket, error));
     
@@ -65,6 +62,7 @@ class ChatSocketController {
       console.error('Controller - Authentication error:', err);
       socket.emit('error', { message: 'Authentication failed' });
     }
+    
   }
 
   // Message handlers
@@ -417,7 +415,6 @@ class ChatSocketController {
       'join_room',
       'leave_room',
       'update_status',
-      'disconnect',
       'error',
       'ping',
       'get_online_users',

@@ -49,7 +49,7 @@ export const updateProfile = async (profileData) => {
 
 export const getuserOnPhoneNumber = async (phoneNumber) => {
     try {
-        const response = await api.post(API_USER.USER_INFO_ON_PHONE_NUMBER,  phoneNumber , headers);
+        const response = await api.post(API_USER.USER_INFO_ON_PHONE_NUMBER, phoneNumber, headers);
         return response.data;
     } catch (error) {
         throw error.response ? error.response.data : error.message;
@@ -59,7 +59,7 @@ export const getuserOnPhoneNumber = async (phoneNumber) => {
 
 export const addNewContact = async (contactData) => {
     try {
-        const response = await api.post(API_USER.ADD_NEW_CONTACT,  contactData , headers);
+        const response = await api.post(API_USER.ADD_NEW_CONTACT, contactData, headers);
         return response.data;
     } catch (error) {
         throw error.response ? error.response.data : error.message;
@@ -69,8 +69,37 @@ export const addNewContact = async (contactData) => {
 
 export const getContactList = async () => {
     try {
-        console.log(API_USER.CONTACT_LIST, headers)
         const response = await api.get(API_USER.CONTACT_LIST, headers);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error.message;
+    }
+}
+
+
+export const getUserPendingRequests = async () => {
+    try {
+        const response = await api.get(API_USER.USER_PENDING_REQUESTS, headers);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error.message;
+    }
+}
+
+
+export const getContactPendingRequests = async () => {
+    try {
+        const response = await api.get(API_USER.CONTACT_PENDING_REQUESTS, headers);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : error.message;
+    }
+}
+
+
+export const requestApproval = async (requestInfo) => {
+    try {
+        const response = await api.post(API_USER.REQUEST_APPROVAL, requestInfo, headers);
         return response.data;
     } catch (error) {
         throw error.response ? error.response.data : error.message;

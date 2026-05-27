@@ -37,7 +37,6 @@ const formatDateTime = (datetimeStr) => {
 const ChatListContainer = () => {
   const theme = useSelector((state) => state.theme.themeMode);
   const messageList = useSelector((state) => state.messageList.allChatList);
-  console.log(messageList)
   const [moreOtionsOpen, setMoreOptionsOpen] = useState(false);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newContactOpen, setNewContactOpen] = useState(false);
@@ -104,12 +103,10 @@ const ChatListContainer = () => {
   }
 
   const oprnNewContactModal = () => {
-    try{
+    try {
       console.log("Opening new contact modal");
       setNewChatOpen(!newChatOpen);
-      const contactList = getContactList();
-      console.log("Contact List:", contactList);
-    }catch(err){
+    } catch (err) {
       console.log("Error opening new contact modal:", err);
     }
   }
@@ -222,6 +219,10 @@ export default memo(ChatListContainer)
 
 const NewChatContainer = ({ isOpen, onClose, onOpenNewChat }) => {
   const theme = useSelector((state) => state.theme.themeMode);
+  const contactList = useSelector((state) => state.contactList?.contacts ?? []);
+
+  console.log("Contact List in NewChatContainer:", contactList);
+
 
   const currentColors = {
     background: colors.background[theme],
@@ -269,19 +270,43 @@ const NewChatContainer = ({ isOpen, onClose, onOpenNewChat }) => {
 
           <div className="pb-4">
 
-            {Array.from({ length: 80 }, (_, i) => (
-              <div key={i} className="flex items-center space-x-3 py-2 hover:bg-gray-200 rounded cursor-pointer">
-                <div className="w-8 h-8 rounded-full bg-[#005498] flex items-center justify-center">
-                  <span className="text-white text-xs font-medium">
-                    {String.fromCharCode(65 + (i % 26))}
-                  </span>
+            {contactList.map((contact, i) => {
+              const user = contact?.user;
+              const profilePicture = user?.avatar?.filename;
+
+              return (
+                <div
+                  key={user?.id || i}
+                  className="flex items-center space-x-3 py-2 hover:bg-gray-200 rounded cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-full bg-[#005498] flex items-center justify-center overflow-hidden">
+                    {profilePicture ? (
+                      <img
+                        src={getStaticImageUrl(profilePicture)}
+                        alt={user?.displayName || "User"}
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <span className="text-white text-xs font-medium">
+                        {(user?.displayName || contact?.contactNickname || "U")
+                          .charAt(0)
+                          .toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="font-medium text-sm">
+                      {contact?.contactNickname || user?.displayName}
+                    </div>
+
+                    <div className="text-xs text-gray-500">
+                      {user?.phoneNumber}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-medium text-sm">Contact {i + 1}</div>
-                  <div className="text-xs text-gray-500">Last seen recently</div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
         </div>

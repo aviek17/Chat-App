@@ -15,7 +15,7 @@ const shouldRefreshToken = (decodedToken) => {
     const currentTime = Math.floor(Date.now() / 1000);
     const tokenAge = currentTime - decodedToken.iat;
     const oneDayInSeconds = 24 * 60 * 60;
-    
+
     return tokenAge > oneDayInSeconds;
 };
 

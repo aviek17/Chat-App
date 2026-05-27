@@ -9,11 +9,12 @@ import Logo from '../assets/Logo_Nobg.png'; // Assuming you have a logo image in
 import LeftSectionImage from "../assets/Designer.svg"
 import { useNavigate } from 'react-router-dom';
 import { login } from '../services/user.service.js';
-import { useDispatch } from 'react-redux';
-import { setToken } from '../store/slice/authSlice.js';
+import { useDispatch, useSelector } from 'react-redux';
+import { logout, setToken } from '../store/slice/authSlice.js';
 import ErrorModal from './ErrorModal.jsx';
 import { AuthEvents } from '../sockets/events/auth.js';
 import { setProfilePhotoFileName, setUserInfo } from '../store/slice/userInfoSlice.js';
+import { persistor, store } from '../store/index.js';
 const LoginForm = () => {
     const nav = useNavigate();
     const dispatch = useDispatch();
@@ -24,6 +25,9 @@ const LoginForm = () => {
         open: false,
         message: ''
     });
+
+    const state = useSelector(state => state);
+    // console.log("Current Redux state in LoginForm:", state);
 
     // Form states
     const [formData, setFormData] = useState({
@@ -87,13 +91,13 @@ const LoginForm = () => {
         setIsLoading(true);
 
         try {
-
             const response = await login(formData);
             if (response.token) {
-                dispatch(setUserInfo(response.user));
+                localStorage.setItem('token', response.token);
                 dispatch(setToken(response.token));
+                dispatch(setUserInfo(response.user));
                 dispatch(setProfilePhotoFileName(response?.user?.profilePicture));
-                setShowSuccessModal(true);
+                nav('/');
             }
 
         } catch (error) {
@@ -122,6 +126,7 @@ const LoginForm = () => {
         setShowSuccessModal(false);
         setFormData({ email: '', password: '' });
         setErrors({});
+        nav("/");
     };
 
     return (
@@ -288,12 +293,12 @@ const LoginForm = () => {
             </div>
 
             {/* Success Modal */}
-            <SuccessModal
+            {/* <SuccessModal
                 isOpen={showSuccessModal}
                 onClose={handleModalClose}
                 isLogin={true}
                 userEmail={formData.email}
-            />
+            /> */}
 
             <ErrorModal
                 open={error.open}

@@ -5,6 +5,8 @@ import Register from './pages/Register';
 import MainLayout from './layouts/MainLayout';
 import PrivateRoute from './routes/PrivateRoute';
 import { useEffect } from 'react';
+import MainContainer from './pages/MainContainer';
+import FriendApproval from './pages/FriendApproval';
 
 function App() {
   useEffect(() => {
@@ -24,7 +26,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route element={<PrivateRoute />}>
-          <Route path="/*" element={<MainLayout />}>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<MainContainer />} />
+            <Route path="/contact" element={<FriendApproval />} />
           </Route>
         </Route>
       </Routes>
