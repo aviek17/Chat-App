@@ -2,7 +2,7 @@
 import React, { memo } from 'react';
 import { Phone, Video, MoreVertical, Search } from 'lucide-react';
 
-const ChatHeader = ({ contact, theme, colors }) => {
+const ChatHeader = ({ contact, profilePic, theme, colors }) => {
     const currentColors = {
         background: colors.background[theme],
         text: colors.text[theme],
@@ -14,31 +14,48 @@ const ChatHeader = ({ contact, theme, colors }) => {
         color: currentColors.text.primary
     };
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'online':
-                return '#4CAF50';
-            case 'away':
-                return '#FF9800';
-            default:
-                return currentColors.text.secondary;
+    const getStatusColor = (isOnline) => {
+        if (isOnline) {
+            return '#4CAF50';
+        } else {
+            return currentColors.text.secondary;
         }
     };
+
+
     return (
         <div className="flex items-center justify-between p-4 h-16" style={headerStyle}>
             <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 border-[2px] border-[#4CAF50] relative">
+                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 border-2 relative"
+                    style={{
+                        borderColor: getStatusColor(contact.isOnline)
+                    }}>
                     <div
                         className="w-3 h-3 rounded-full absolute bottom-[-3px] right-[-3px] border-2 border-white"
-                        style={{ backgroundColor: getStatusColor(contact.status) }}
+                        style={{ backgroundColor: getStatusColor(contact.isOnline) }}
                     />
-                    <span className="text-sm font-medium" style={{ color: currentColors.text.primary }}>
-                        {contact.avatar}
-                    </span>
+                    <div className="w-8 h-8 rounded-full bg-[#005498] flex items-center justify-center overflow-hidden">
+                        {profilePic ? (
+                            <img
+                                src={profilePic}
+                                alt={contact?.displayName || "User"}
+                                className="w-full h-full object-cover rounded-full"
+                            />
+                        ) : (
+                            <span
+                                className="text-sm font-medium text-white"
+                                style={{ color: currentColors.text.primary }}
+                            >
+                                {(contact?.displayName || "U")
+                                    .charAt(0)
+                                    .toUpperCase()}
+                            </span>
+                        )}
+                    </div>
                 </div>
                 <div className="flex-1 min-w-0">
                     <h2 className="font-medium text-base truncate cursor-pointer" style={{ color: currentColors.text.primary }}>
-                        {contact.name}
+                        {contact.displayName}
                     </h2>
                 </div>
             </div>

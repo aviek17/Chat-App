@@ -1,10 +1,10 @@
-import React, { memo, useState } from 'react';
-import { Search, User, Users, UserPlus, ListFilter, MessageCircleMore, Star, Archive, } from 'lucide-react';
+import React, { memo, useMemo, useState } from 'react';
+import { Search, User, Users, UserPlus, ListFilter, MessageCircleMore, Star, Archive, Check, CircleCheck, CheckCheck, } from 'lucide-react';
 import { colors } from '../styles/theme';
 import { useDispatch, useSelector } from 'react-redux';
 import NewContactContainer from '../components/NewContact';
 import { ChatEvents } from '../sockets/events/chat';
-import { setSelectedUserInfo } from '../store/slice/selectedUserSlice';
+import { setSelectedUserInfo, setUserProfilePicture } from '../store/slice/selectedUserSlice';
 import { getBase64FromFile, getStaticImageUrl } from '../services/common.service';
 import { getContactList } from '../services/user.service';
 
@@ -34,13 +34,57 @@ const formatDateTime = (datetimeStr) => {
 }
 
 
-const ChatListContainer = () => {
+const ChatListContainerExternal = () => {
   const theme = useSelector((state) => state.theme.themeMode);
   const messageList = useSelector((state) => state.messageList.allChatList);
   const [moreOtionsOpen, setMoreOptionsOpen] = useState(false);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newContactOpen, setNewContactOpen] = useState(false);
   const dispatch = useDispatch();
+  const contactList = useSelector(state => state.contactList.contacts ?? []);
+  const userDisplayMessages = useSelector(state => state.allUsersMsgs);
+
+  const contacts = useMemo(() => {
+    return contactList.reduce((acc, contact) => {
+      const userId = contact?.user?.id;
+      if (userId) {
+        acc[userId] = contact;
+      }
+      return acc;
+    }, {});
+  }, [contactList]);
+
+
+  const messages = useMemo(() => {
+    let messageArray = [];
+    let contactUserId = Object.keys(contacts ?? {});
+
+    if (contactUserId && contactUserId?.length > 0) {
+      contactUserId.forEach((id) => {
+        let obj = {};
+        obj['userInfo'] = contacts[id];
+        obj['showOnMessageList'] = false;
+        obj['profilePicture'] = contacts[id]?.user?.avatar?.filename ? getStaticImageUrl(contacts[id]?.user?.avatar?.filename) : null;
+        obj['showCheckedIcon'] = false;
+        if (userDisplayMessages[id]) {
+          obj['showOnMessageList'] = true;
+          obj['lastUserMessage'] = userDisplayMessages[id]?.messages[0] ?? {};
+          obj['unreadCount'] = userDisplayMessages[id]?.unreadCount ?? 0;
+          if (userDisplayMessages[id]?.messages[0]?.sender !== id) {
+            obj['showCheckedIcon'] = true;
+          }
+        }
+        messageArray.push(obj);
+      })
+    }
+
+    return messageArray;
+
+  }, [contacts, userDisplayMessages])
+
+  console.log("messageList", messages)
+
+
 
   const currentColors = {
     background: colors.background[theme],
@@ -82,24 +126,26 @@ const ChatListContainer = () => {
     dispatch(setSelectedUserInfo(userOnlineStatus));
   }
 
-  const openChatContainer = (chatPartner) => {
-    let userInfo = {
-      id: chatPartner._id,
-      displayName: chatPartner.name,
-      bio: chatPartner.bio,
-      phoneNo: chatPartner.phoneNo,
-      email: chatPartner.email,
-      username: chatPartner.userName,
-      //nickname will be set afterwards
-      nickName: {
-        firstName: "",
-        lastName: ""
-      }
-    };
+  const openChatContainer = (userInfo) => {
+    let userData = {
+      id: userInfo.user.id,
+      displayName: userInfo.user.displayName,
+      bio: userInfo.user.bio,
+      phoneNo: userInfo.user.phoneNumber,
+      email: "",
+      isOnline: false,
+      username: userInfo.user.username,
+      nickName: userInfo.contactNickname || ""
+    }
+    let userPic = userInfo.user.avatar?.filename;
+    if (userPic) {
+      dispatch(setUserProfilePicture(getStaticImageUrl(userPic)));
+    }
+    dispatch(setSelectedUserInfo(userData));
 
     dispatch(setSelectedUserInfo(userInfo));
-    ChatEvents.onReceivingUserStatus(onReceivingUserStatus);
-    ChatEvents.getUserOnlineStatus({ userId: chatPartner._id });
+    // ChatEvents.onReceivingUserStatus(onReceivingUserStatus);
+    // ChatEvents.getUserOnlineStatus({ userId: chatPartner._id });
   }
 
   const oprnNewContactModal = () => {
@@ -149,9 +195,9 @@ const ChatListContainer = () => {
 
       <div
         className={`flex-1 overflow-y-auto transition-all duration-300 scrollbar-visible}`}>
-        {messageList.map((chat) => (
+        {messages.map((chat) => (
           <div
-            key={chat.chatPartnerId}
+            key={chat.userInfo?.user?.id}
             className="flex items-center p-4 cursor-pointer transition-colors hover:bg-gray-50"
             style={chatItemStyle}
             onMouseEnter={(e) => {
@@ -160,31 +206,53 @@ const ChatListContainer = () => {
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
             }}
-            onClick={() => { openChatContainer(chat.chatPartner) }}
+            onClick={() => { openChatContainer(chat?.userInfo) }}
           >
-            <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden">
-              {chat.chatPartner?.profilePicture && (
+            <div className="w-12 h-12 rounded-full bg-[#005498] flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden">
+              {chat?.profilePicture ? (
                 <img
-                  src={getStaticImageUrl(chat.chatPartner.profilePicture)}
-                  alt="Profile Pic"
-                  className="w-full h-full object-cover"
+                  src={chat.profilePicture}
+                  alt={chat?.displayName || "User"}
+                  className="w-full h-full object-cover rounded-full"
                 />
+              ) : (
+                <span className="text-white text-sm font-medium">
+                  {(chat?.displayName || chat?.userName || "U")
+                    .charAt(0)
+                    .toUpperCase()}
+                </span>
               )}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <h3 className="font-medium text-sm truncate" style={{ color: currentColors.text.primary }}>
-                  {chat.chatPartner.displayName || chat.chatPartner.userName}
+                  {chat.userInfo?.user?.displayName || chat.userInfo?.user?.username}
                 </h3>
                 <span className="text-xs ml-2 flex-shrink-0" style={{ color: currentColors.text.secondary }}>
-                  {formatDateTime(chat.lastMessage.createdAt)}
+                  {formatDateTime(chat?.lastUserMessage?.timestamp)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <p className="text-sm truncate" style={{ color: currentColors.text.secondary }}>
-                  {chat.lastMessage.content}
-                </p>
-                {chat.unreadCount > 0 && (
+                <div className="flex items-center gap-1 min-w-0">
+                  {
+                    chat?.showCheckedIcon && (
+                      <>
+                        <span
+                          className="flex-shrink-0"
+                          style={{ color: currentColors.text.secondary }}
+                        >
+                          {chat?.lastUserMessage?.status === 'sent' && <Check size={14} style={{ color: "#005498" }} />}
+                          {chat?.lastUserMessage?.status === 'delivered' && <CircleCheck size={14} style={{ color: "#005498" }} />}
+                          {chat?.lastUserMessage?.status === 'read' && <CheckCheck size={14} style={{ color: "#005498" }} />}
+                        </span>
+                      </>
+                    )
+                  }
+                  <p className="text-sm truncate" style={{ color: currentColors.text.secondary }}>
+                    {chat?.lastUserMessage?.messageContent}
+                  </p>
+                </div>
+                {chat?.unreadCount > 0 && (
                   <div
                     className="ml-2 px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 min-w-5 h-5 flex items-center justify-center"
                     style={{
@@ -192,7 +260,7 @@ const ChatListContainer = () => {
                       color: colors.primary.contrastText
                     }}
                   >
-                    {chat.unreadCount}
+                    {chat?.unreadCount}
                   </div>
                 )}
               </div>
@@ -213,13 +281,14 @@ const ChatListContainer = () => {
   )
 }
 
-export default memo(ChatListContainer)
+export default memo(ChatListContainerExternal)
 
 
 
 const NewChatContainer = ({ isOpen, onClose, onOpenNewChat }) => {
   const theme = useSelector((state) => state.theme.themeMode);
   const contactList = useSelector((state) => state.contactList?.contacts ?? []);
+  const dispatch = useDispatch();
 
   console.log("Contact List in NewChatContainer:", contactList);
 
@@ -234,6 +303,25 @@ const NewChatContainer = ({ isOpen, onClose, onOpenNewChat }) => {
     console.log("New Contact Clicked");
     onClose();
     onOpenNewChat();
+  }
+
+  const onNewChatInitiationClick = (userInfo) => {
+    let userData = {
+      id: userInfo.user.id,
+      displayName: userInfo.user.displayName,
+      bio: userInfo.user.bio,
+      phoneNo: userInfo.user.phoneNumber,
+      email: "",
+      isOnline: false,
+      username: userInfo.user.username,
+      nickName: userInfo.contactNickname || ""
+    }
+    let userPic = userInfo.user.avatar?.filename;
+    if (userPic) {
+      dispatch(setUserProfilePicture(getStaticImageUrl(userPic)));
+    }
+    dispatch(setSelectedUserInfo(userData));
+    onClose();
   }
 
   if (!isOpen) return null;
@@ -278,6 +366,7 @@ const NewChatContainer = ({ isOpen, onClose, onOpenNewChat }) => {
                 <div
                   key={user?.id || i}
                   className="flex items-center space-x-3 py-2 hover:bg-gray-200 rounded cursor-pointer"
+                  onClick={() => { onNewChatInitiationClick(contact) }}
                 >
                   <div className="w-8 h-8 rounded-full bg-[#005498] flex items-center justify-center overflow-hidden">
                     {profilePicture ? (

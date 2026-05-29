@@ -18,6 +18,12 @@ const allUserMsgSlice = createSlice({
         ...initialState
     },
     reducers: {
+        addAllLastUsersMessages: (state, action) => {
+            const payload = action.payload;
+            Object.keys(payload).forEach((userId) => {
+                state[userId] = payload[userId];
+            });
+        },
         getUserMsgFromList: (state, action) => {
             const userId = action.payload;
             return state[userId] || [];
@@ -39,7 +45,7 @@ const allUserMsgSlice = createSlice({
 });
 
 
-export const { getUserMsgFromList, addUserToMsgList, removeMsgListForUser, removeAllMsgList } = allUserMsgSlice.actions;
+export const { addAllLastUsersMessages, getUserMsgFromList, addUserToMsgList, removeMsgListForUser, removeAllMsgList } = allUserMsgSlice.actions;
 
 export default allUserMsgSlice.reducer;
 

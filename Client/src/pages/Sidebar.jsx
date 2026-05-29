@@ -10,7 +10,7 @@ import ExitToAppIcon from '../BoxIcons/ExitToApplication';
 import { Divider, Modal } from '@mui/material';
 import { useDispatch } from 'react-redux';
 import { toggleMenuState } from '../store/slice/menuDrawerSlice';
-import { removeUerInfo } from '../store/slice/selectedUserSlice';
+import { removeUserInfo } from '../store/slice/selectedUserSlice';
 import MenuDrawer from '../components/MenuDrawer';
 import { logout } from '../store/slice/authSlice';
 import { useState } from 'react';
@@ -111,7 +111,7 @@ const Sidebar = () => {
                 AuthEvents.logout();
                 dispatch(logout());
                 await persistor.purge()
-                dispatch(removeUerInfo());
+                dispatch(removeUserInfo());
                 localStorage.clear();
                 navigate("/login");
                 console.log("clicked logout");

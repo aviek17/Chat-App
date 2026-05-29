@@ -10,7 +10,21 @@ const UserSchema = new mongoose.Schema({
     bio: { type: String, maxlength: 200, default: '' },
     profilePicture: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'ProfilePhoto' 
+        ref: 'ProfilePhoto'
+    },
+    isOnline: {
+        type: Boolean,
+        default: false,
+        index: true
+    },
+    lastSeen: {
+        type: Date,
+        default: null
+    },
+    status: {
+        type: String,
+        enum: ['online', 'away', 'offline'],
+        default: 'offline'
     },
     isVerified: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
@@ -22,6 +36,7 @@ const UserSchema = new mongoose.Schema({
 UserSchema.index({ username: 1 });
 UserSchema.index({ email: 1 });
 UserSchema.index({ phoneNumber: 1 });
+UserSchema.index({ isOnline: 1, status: 1 });
 
 UserSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();

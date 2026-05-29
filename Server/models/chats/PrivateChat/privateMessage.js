@@ -4,7 +4,7 @@ const logger = require("../../../utils/logger");
 
 
 // Encryption configuration
-const ENCRYPTION_KEY = Buffer.from(process.env.MESSAGE_ENCRYPTION_KEY, 'hex'); // 32 bytes hex string
+const ENCRYPTION_KEY = Buffer.from(process.env.MESSAGE_ENCRYPTION_KEY, 'hex'); 
 const ALGORITHM = process.env.MESSAGE_ENCRYPTION_ALGO;
 
 

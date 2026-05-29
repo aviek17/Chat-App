@@ -1,19 +1,13 @@
-import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
-import { MessageEvents } from '../sockets/events/message';
-import { useSocket } from '../sockets/hooks/useSocket';
 import { useSelector } from 'react-redux';
-import { ChatEvents } from '../sockets/events/chat';
 
-const MessageList = ({ selectedUserId, theme, colors, onNewMessage }) => {
+const MessageList = ({ selectedUserId, theme, colors }) => {
   const messagesEndRef = useRef(null);
-  const messagesContainerRef = useRef(null);
-  const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef(null);
-  const [messages, setMessages] = useState([]);
-  const usersMsgsList = useSelector(state => state.allUsersMsgs);
 
-  const { isConnected } = useSocket();
+  const currentUserId = useSelector(state => state.user.userInfo.id);
+  const messages = useSelector(state => state.selectedUser.messages);
 
   const currentColors = {
     background: colors.background[theme],
@@ -21,167 +15,130 @@ const MessageList = ({ selectedUserId, theme, colors, onNewMessage }) => {
     chat: colors.chat[theme]
   };
 
-  const scrollToBottom = () => {
+  // ─── Scroll to bottom whenever messages change ────────────────────────────
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const handleChatHistoryReceived = useCallback((chatHistory) => {
-    console.log('Chat history received:', chatHistory);
-    setMessages(chatHistory?.messages || []);
   }, []);
 
   useEffect(() => {
-    ChatEvents.onChatHistoryReceived(handleChatHistoryReceived);
-
-    return () => {
-      ChatEvents.offChatHistoryReceived(handleChatHistoryReceived);
-    };
-  }, [handleChatHistoryReceived]);
-
-  useEffect(() => {
-    if (!selectedUserId) {
-      setMessages([]);
-      return;
-    }
-
-    const cachedMessages = usersMsgsList[selectedUserId];
-    if (cachedMessages) {
-      console.log("Using cached messages:", cachedMessages);
-      // setMessages(cachedMessages);
-      return;
-    }
-
-    console.log("Fetching chat history for user:", selectedUserId);
-    const data = { otherUserId: selectedUserId };
-    ChatEvents.getChatHistory(data);
-
-    setMessages([]);
-  }, [selectedUserId]);
-
-  useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
   const handleScroll = () => {
-    setIsScrolling(true);
-
-    // Clear existing timeout
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-
-    // Hide scrollbar after 1 second of no scrolling
-    scrollTimeoutRef.current = setTimeout(() => {
-      setIsScrolling(false);
-    }, 1000);
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(() => { }, 1000);
   };
 
-  const handleNewMessage = useCallback((message) => {
-    if (onNewMessage) {
-      onNewMessage(message);
-    } else {
-      console.warn(' MessageList: No onNewMessage handler provided by parent');
-    }
-  }, [onNewMessage]);
-
-  useEffect(() => {
-    console.log('MessageList useEffect triggered:', {
-      isConnected,
-      hasOnNewMessage: !!onNewMessage,
-      handleNewMessageRef: !!handleNewMessage
-    });
-
-    if (!isConnected) {
-      return;
-    }
-
-    MessageEvents.onNewMessage(handleNewMessage);
-
-    return () => {
-      MessageEvents.offNewMessage(handleNewMessage);
-    };
-  }, [isConnected, handleNewMessage]);
-
-
-  useEffect(() => {
-    console.log('MessageList: Socket state changed:', {
-      isConnected,
-      socketId: window.socketManager?.socket?.id || 'no socket'
-    });
-  }, [isConnected]);
-
+  // ─── Date grouping ────────────────────────────────────────────────────────
   const formatMessageDate = (timestamp) => {
+    if (!timestamp) return 'Unknown';
     const messageDate = new Date(timestamp);
+    if (isNaN(messageDate.getTime())) return 'Unknown';   // guard
+
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (messageDate.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (messageDate.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    } else {
-      return messageDate.toLocaleDateString();
-    }
+    if (messageDate.toDateString() === today.toDateString()) return 'Today';
+    if (messageDate.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return messageDate.toLocaleDateString();
   };
 
-  const groupMessagesByDate = (messages) => {
-    const grouped = {};
-    messages.forEach(message => {
-      const date = formatMessageDate(message.createdAt);
-      if (!grouped[date]) {
-        grouped[date] = [];
-      }
+  const groupMessagesByDate = (msgs) =>
+    msgs.reduce((grouped, message) => {
+      // FIX: use message.timestamp — matches your message object shape
+      const date = formatMessageDate(message.timestamp);
+      if (!grouped[date]) grouped[date] = [];
       grouped[date].push(message);
-    });
-    console.log("grouped messages:", grouped);
-    return grouped;
-  };
+      return grouped;
+    }, {});
 
   const groupedMessages = groupMessagesByDate(messages);
 
+  // ─── Sender logic ─────────────────────────────────────────────────────────
+  // message.sender is a plain string ID (not a nested object)
+  // selectedUserId is the person I'm chatting WITH
+  // if message.sender === selectedUserId  → they sent it  → received by me
+  // if message.sender !== selectedUserId  → I sent it
+  const isSentByMe = (message) => message.sender !== selectedUserId;
+
+  // ─── Empty states ─────────────────────────────────────────────────────────
+  if (!selectedUserId) {
+    return (
+      <div
+        className="flex items-center justify-center h-[calc(100vh-180px)]"
+        style={{ backgroundColor: currentColors.background.secondary }}
+      >
+        <p className="text-sm" style={{ color: currentColors.text.secondary }}>
+          Select a conversation to start chatting
+        </p>
+      </div>
+    );
+  }
+
+  if (messages.length === 0) {
+    return (
+      <div
+        className="flex items-center justify-center h-[calc(100vh-180px)]"
+        style={{ backgroundColor: currentColors.background.secondary }}
+      >
+        <p className="text-sm" style={{ color: currentColors.text.secondary }}>
+          No messages yet. Say hello! 👋
+        </p>
+      </div>
+    );
+  }
+
+  // ─── Render ───────────────────────────────────────────────────────────────
+  // flex-col puts oldest group at top, newest at bottom
+  // messagesEndRef at the very bottom keeps scroll anchored to latest message
+
   return (
     <div
-      ref={messagesContainerRef}
-      className={`overflow-y-auto p-4 h-[calc(100vh-180px)]
-      }`}
+      className="overflow-y-auto p-4 h-[calc(100vh-180px)] flex flex-col justify-end"
       style={{
         backgroundColor: currentColors.background.secondary,
         backgroundImage: theme === 'light'
-          ? 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23f0f0f0" fill-opacity="0.3"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
-          : 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23333333" fill-opacity="0.1"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
+          ? 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23f0f0f0\' fill-opacity=\'0.3\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
+          : 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23333333\' fill-opacity=\'0.1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
       }}
       onScroll={handleScroll}
     >
-      {Object.entries(groupedMessages).map(([date, dateMessages]) => (
-        <div key={date} className="mb-6">
-          {/* Date separator */}
-          <div className="flex justify-center mb-4">
-            <div
-              className="px-3 py-1 rounded-lg text-xs font-medium"
-              style={{
-                backgroundColor: currentColors.background.elevated,
-                color: currentColors.text.secondary
-              }}
-            >
-              {date}
+      {/* Inner wrapper — grows naturally, pushes content to bottom */}
+      <div className="flex flex-col">
+        {Object.entries(groupedMessages).map(([date, dateMessages]) => (
+          <div key={date} className="mb-4">
+
+            {/* Date separator */}
+            <div className="flex justify-center mb-3">
+              <div
+                className="px-3 py-1 rounded-full text-xs font-medium"
+                style={{
+                  backgroundColor: currentColors.background.elevated,
+                  color: currentColors.text.secondary
+                }}
+              >
+                {date}
+              </div>
             </div>
+
+            {/* Messages for this date */}
+            {dateMessages.map((message, index) => (
+              <MessageBubble
+                key={message.messageId || index}
+                message={message}
+                isSentByMe={isSentByMe(message)}
+                theme={theme}
+                colors={colors}
+              />
+            ))}
+
           </div>
+        ))}
 
-          {/* Messages for this date */}
-          {dateMessages.map((message, index) => (
-            <MessageBubble
-              key={message.id || index}
-              message={message}
-              theme={theme}
-              colors={colors}
-              selectedUserId={selectedUserId}
-            />
-          ))}
-        </div>
-      ))}
-
-      <div ref={messagesEndRef} />
+        {/* Anchor — scroll always lands here (bottom of list) */}
+        <div ref={messagesEndRef} />
+      </div>
     </div>
   );
 };

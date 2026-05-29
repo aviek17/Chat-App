@@ -9,14 +9,12 @@ const initialState = {
         email : "",
         isOnline: false,
         username: "",
-        nickName : {
-            firstName : "",
-            lastName : ""
-        }
+        nickName : ""
     },
     userProfilePicture: "",
     messages : []
 };
+
 
 
 
@@ -39,7 +37,7 @@ const selectedUserSlice = createSlice({
         setUserNewMessage: (state, action) => {
             state.messages.push(action.payload);
         },
-        removeUerInfo: (state) => {
+        removeUserInfo: (state) => {
             state.userInfo = initialState.userInfo;
             state.userProfilePicture = initialState.userProfilePicture; 
             state.messages = initialState.messages;
@@ -47,6 +45,6 @@ const selectedUserSlice = createSlice({
     }
 })
 
-export const { setSelectedUserInfo, setUserProfilePicture, setUserMessages, setUserNewMessage, removeUerInfo } = selectedUserSlice.actions;
+export const { setSelectedUserInfo, setUserProfilePicture, setUserMessages, setUserNewMessage, removeUserInfo } = selectedUserSlice.actions;
 
 export default selectedUserSlice.reducer;

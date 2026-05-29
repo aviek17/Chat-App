@@ -1,107 +1,80 @@
+import { Check, CheckCheck, CircleCheck } from 'lucide-react';
 
-import { Check, CheckCheck } from 'lucide-react';
+// isSentByMe is computed in MessageList:
+//   message.sender !== selectedUserId  →  I sent it   → align right
+//   message.sender === selectedUserId  →  they sent it → align left
 
-const MessageBubble = ({ message, theme, colors, selectedUserId }) => {
+const MessageBubble = ({ message, isSentByMe, theme, colors }) => {
   const currentColors = {
     background: colors.background[theme],
-    text: colors.text[theme],
-    chat: colors.chat[theme]
+    text:       colors.text[theme],
+    chat:       colors.chat[theme]
   };
 
-  const isUserMessage = message?.sender?._id === selectedUserId;
-
+  // ─── Bubble styles ────────────────────────────────────────────────────────
   const bubbleStyle = {
-    backgroundColor: isUserMessage ? currentColors.chat.userBubble : currentColors.chat.otherBubble,
-    color: isUserMessage ? currentColors.chat.userBubbleText : currentColors.chat.otherBubbleText,
-    maxWidth: '100%'
+    backgroundColor: isSentByMe
+      ? currentColors.chat.userBubble
+      : currentColors.chat.otherBubble,
+    color: isSentByMe
+      ? currentColors.chat.userBubbleText
+      : currentColors.chat.otherBubbleText,
   };
 
+  // ─── Status icon (only on my messages) ───────────────────────────────────
   const getStatusIcon = (status) => {
     switch (status) {
       case 'sent':
-        return <Check size={16} style={{ color: currentColors.text.secondary }} />;
+        return <Check size={14} style={{ color: "#fff" }} />;
       case 'delivered':
-        return <CheckCheck size={16} style={{ color: currentColors.text.secondary }} />;
+        return <CircleCheck size={14} style={{ color: "#fff" }} />;
       case 'read':
-        return <CheckCheck size={16} style={{ color: colors.primary.main }} />;
+        return <CheckCheck size={14} style={{ color: colors.primary?.main ?? '#2563eb' }} />;
       default:
         return null;
     }
   };
 
+  // ─── Time format — FIX: use message.timestamp not message.createdAt ───────
   const formatTime = (timestamp) => {
+    if (!timestamp) return '';
     const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return '';         
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
-    <div className={`flex mb-3 ${isUserMessage ? 'justify-end' : 'justify-start'}`}>
-      <div className="flex items-end space-x-2 max-w-full">
-        {!isUserMessage && (
-          <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
+    <div className={`flex mb-3 px-2 ${isSentByMe ? 'justify-end' : 'justify-start'}`}>
+      <div className={`flex items-end gap-2 max-w-[60%] min-w-0 ${isSentByMe ? 'flex-row-reverse' : 'flex-row'}`}>
+
+        {!isSentByMe && (
+          <div className="w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0 self-end">
             <span className="text-xs font-medium" style={{ color: currentColors.text.primary }}>
-              {message.senderAvatar}
+              {message.senderAvatar ?? '?'}
             </span>
           </div>
         )}
 
-        <div className="flex flex-col">
-          {!isUserMessage && message.senderName && (
-            <span className="text-xs mb-1 ml-3" style={{ color: currentColors.text.secondary }}>
-              {message?.sender?.userName}
+        {/* Bubble */}
+        <div
+          className={`px-4 py-2 rounded-2xl w-fit min-w-[60px] ${
+            isSentByMe ? 'rounded-br-sm' : 'rounded-bl-sm'
+          }`}
+          style={bubbleStyle}
+        >
+
+          <p className="text-sm break-words whitespace-pre-wrap leading-relaxed">
+            {message.messageContent}
+          </p>
+
+          <div className={`flex items-center gap-1 mt-1 ${isSentByMe ? 'justify-end' : 'justify-start'}`}>
+            <span className="text-xs opacity-60">
+              {formatTime(message.timestamp)}
             </span>
-          )}
-
-          <div
-            className={`px-4 py-2 rounded-lg relative ${isUserMessage
-                ? 'rounded-br-sm'
-                : 'rounded-bl-sm'
-              }`}
-            style={bubbleStyle}
-          >
-            <p className="text-sm break-words whitespace-pre-wrap">
-              {message.content}
-            </p>
-            {/* {message.type === 'text' && (
-              
-            )}
-            
-            {message.type === 'image' && (
-              <div className="space-y-2">
-                <img 
-                  src={message.content} 
-                  alt="Shared image" 
-                  className="max-w-full h-auto rounded-lg"
-                />
-                {message.caption && (
-                  <p className="text-sm break-words whitespace-pre-wrap">
-                    {message.caption}
-                  </p>
-                )}
-              </div>
-            )}
-            
-            {message.type === 'file' && (
-              <div className="flex items-center space-x-3 p-2 rounded-lg border" 
-                   style={{ borderColor: theme === 'light' ? '#e0e0e0' : '#505050' }}>
-                <div className="w-8 h-8 rounded bg-gray-300 flex items-center justify-center">
-                  <span className="text-xs font-medium">📄</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{message.fileName}</p>
-                  <p className="text-xs opacity-70">{message.fileSize}</p>
-                </div>
-              </div>
-            )} */}
-
-            <div className="flex items-center justify-end space-x-1 mt-1">
-              <span className="text-xs opacity-70">
-                {formatTime(message.createdAt)}
-              </span>
-              {isUserMessage && getStatusIcon(message.status)}
-            </div>
+            {isSentByMe && getStatusIcon(message.status)}
           </div>
         </div>
+
       </div>
     </div>
   );

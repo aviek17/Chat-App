@@ -103,6 +103,7 @@ const ChatContainer = () => {
 
     const theme = useSelector((state) => state.theme.themeMode);
     const selectedUserInfo = useSelector(state => state.selectedUser.userInfo);
+    const selectedUserProfilePic = useSelector(state => state.selectedUser.userProfilePicture);
     const usersMsgsList = useSelector(state => state.allUsersMsgs);
     const [messages, setMessages] = useState(mockMessages);
     const [contact] = useState(mockContact);
@@ -195,9 +196,9 @@ const ChatContainer = () => {
             className="flex-1 flex flex-col h-[calc(100vh-50px)]"
             style={{ backgroundColor: currentColors.background.primary }}
         >
-            <ChatHeader selectedUserInfo={selectedUserInfo} contact={contact} theme={theme} colors={colors} />
-            <MessageList selectedUserId={selectedUserInfo.id} theme={theme} colors={colors} onNewMessage={handleNewMessage} />
-            <MessageInput selectedUserId={selectedUserInfo.id} onSendMessage={handleSendMessage} theme={theme} colors={colors} />
+            <ChatHeader  contact={selectedUserInfo} profilePic={selectedUserProfilePic} theme={theme} colors={colors} />
+            <MessageList selectedUserId={selectedUserInfo.id} theme={theme} colors={colors} />
+            <MessageInput selectedUserId={selectedUserInfo.id} theme={theme} colors={colors} />
         </div>
     )
 }

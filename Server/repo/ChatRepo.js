@@ -31,10 +31,10 @@ class ChatRepository {
 
     // Create a new message
     async createMessage(messageData) {
-        const { content } = messageData;
         const {
             sender,
             receiver,
+            content,
             status
         } = messageData;
         try {
@@ -45,7 +45,14 @@ class ChatRepository {
             });
             message.setContent(content);
             await message.save();
-            return message;
+            return {
+                messageId: message._id,
+                sender: message.sender,
+                receiver: message.receiver,
+                messageContent: message.content,
+                status: message.status,
+                timestamp: message.createdAt
+            };
         } catch (error) {
             throw new Error(`Failed to create message: ${error.message}`);
         }
@@ -644,6 +651,18 @@ class ChatRepository {
                             then: '$receiver',
                             else: '$sender'
                         }
+                    },
+                    isUnread: {
+                        $cond: {
+                            if: {
+                                $and: [
+                                    { $eq: ['$receiver', new ObjectId(userId)] },
+                                    { $eq: ['$status', 'delivered'] }
+                                ]
+                            },
+                            then: 1,
+                            else: 0
+                        }
                     }
                 }
             },
@@ -651,27 +670,25 @@ class ChatRepository {
             {
                 $group: {
                     _id: '$chatPartner',
-                    lastMessageId: { $first: '$_id' }   // only grab the ID
+                    lastMessageId: { $first: '$_id' },
+                    unreadCount: { $sum: '$isUnread' }  
                 }
             }
         ]);
 
         if (!messages.length) return {};
 
-        // Fetch actual Mongoose documents using IDs — virtuals work on documents
         const lastMessageIds = messages.map(m => m.lastMessageId);
 
         const messageDocs = await Message.find({
             _id: { $in: lastMessageIds }
-        });                                        // no .lean() — virtuals need full doc
+        });
 
-        // Map messageId → document for quick lookup
         const docMap = {};
         messageDocs.forEach(doc => {
             docMap[doc._id.toString()] = doc;
         });
 
-        // Build result
         const result = {};
 
         messages.forEach(m => {
@@ -683,18 +700,19 @@ class ChatRepository {
             result[contactId] = {
                 messages: [
                     {
-                        messageContent: doc.content,      // ← virtual handles decryption
+                        messageId: doc._id,
+                        messageContent: doc.content,
                         sender: doc.sender,
                         receiver: doc.receiver,
-                        time: doc.createdAt,
+                        timestamp: doc.createdAt,
                         status: doc.status
                     }
-                ]
+                ],
+                unreadCount: m.unreadCount  
             };
         });
 
         return result;
-
     }
 
     async getUserLastMessages(userId) {
@@ -752,7 +770,7 @@ class ChatRepository {
 
             result[contactId] = {
                 messages: chat.messages.map(msg => ({
-                    messageContent: Message.decryptContent(msg.encryptedContent, msg.iv), 
+                    messageContent: Message.decryptContent(msg.encryptedContent, msg.iv),
                     sender: msg.sender,
                     receiver: msg.receiver,
                     time: msg.createdAt,

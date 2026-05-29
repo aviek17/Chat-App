@@ -7,7 +7,11 @@ export class MessageEvents {
     }
 
     static onMessageSent(callback) {
-        socketManager.on('message_sent', callback);
+        socketManager.on('message_sent_successfully', callback);
+    }
+
+    static offMessageSent(callback) {
+        socketManager.off('message_sent_successfully', callback);
     }
 
     static sendMessageWithAttachment(messageData) {
@@ -42,12 +46,24 @@ export class MessageEvents {
         socketManager.on('message_delivered_update', callback);
     }
 
+     static offMessageDelivered(callback) {
+        socketManager.off('message_delivered_update', callback);
+    }
+
     static onMessageRead(callback) {
         socketManager.on('message_read_update', callback);
     }
 
+     static offMessageRead(callback) {
+        socketManager.off('message_read_update', callback);
+    }
+
     static onMessageDeleted(callback) {
         socketManager.on('message_deleted', callback);
+    }
+
+     static offMessageDeleted(callback) {
+        socketManager.off('message_deleted', callback);
     }
 
     static removeMessageListeners() {

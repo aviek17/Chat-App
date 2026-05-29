@@ -1,15 +1,18 @@
-import React, { useState, useRef, memo } from 'react';
+import React, { useState, useRef, memo, useEffect } from 'react';
 import { Send, Paperclip, Smile, Mic } from 'lucide-react';
 import EmojiPickerComponent from './EmojiPicker';
 import { useEmojiPicker } from '../hooks/useEmojiPicker';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { MessageEvents } from '../sockets/events/message';
+import { setUserNewMessage } from '../store/slice/selectedUserSlice';
 
-const MessageInput = ({ onSendMessage, theme, colors, selectedUserId }) => {
+const MessageInput = ({ theme, colors, selectedUserId }) => {
   const [message, setMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef(null);
   const userInfo = useSelector(state => state?.user?.userInfo);
+
+  const dispatch = useDispatch();
 
   const {
     isOpen: isEmojiPickerOpen,
@@ -34,39 +37,7 @@ const MessageInput = ({ onSendMessage, theme, colors, selectedUserId }) => {
     outline: 'none'
   };
 
-  const handleSubmit = (e) => {
-    console.log("handleSubmit called");
-    e.preventDefault();
-    if (message.trim()) {
-      // onSendMessage({
-      //   type: 'text',
-      //   content: message.trim(),
-      //   timestamp: new Date().toISOString(),
-      //   sender: 'user',
-      //   status: 'sent'
-      // });
-      console.log("new msg ", message.trim());
-      onMessageSend(message.trim());
-      setMessage('');
-      closeEmojiPicker(); // Close emoji picker on send
-      if (textareaRef.current) {
-        textareaRef.current.style.height = '20px';
-      }
-    }
-  };
 
-  const onMessageSend = (msg) => {
-    // const socketData = { userId: userInfo?.id };
-    const messageContent = { receiverId: selectedUserId, content: msg };
-
-    const handleMessageSentSuccessfully = (data) => {
-      console.log("Message sent success:", data.message);
-    };
-    MessageEvents.onMessageSent(handleMessageSentSuccessfully);
-
-    MessageEvents.sendMessage(messageContent);
-
-  }
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -94,6 +65,41 @@ const MessageInput = ({ onSendMessage, theme, colors, selectedUserId }) => {
     console.log('Toggle voice recording');
   };
 
+
+
+
+  const onMessageSend = (msg) => {
+    const messagePayload = { receiverId: selectedUserId, content: msg };
+    MessageEvents.sendMessage(messagePayload);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (message.trim()) {
+      onMessageSend(message.trim());
+      setMessage('');
+      closeEmojiPicker();
+      if (textareaRef.current) {
+        textareaRef.current.style.height = '20px';
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleMessageSentSuccessfully = (data) => {
+      console.log("Message sent success:", data);
+      if (data.status) {
+        dispatch(setUserNewMessage(data.message));
+      }
+    };
+
+    MessageEvents.onMessageSent(handleMessageSentSuccessfully);
+
+    return () => {
+      MessageEvents.offMessageSent(handleMessageSentSuccessfully);
+    };
+  }, [dispatch]);
+
   return (
     <div
       className="p-4 border-t relative"
@@ -112,7 +118,7 @@ const MessageInput = ({ onSendMessage, theme, colors, selectedUserId }) => {
       />
 
       <form className="flex space-x-3 items-center">
-       {/* onSubmit={handleSubmit} */}
+        {/* onSubmit={handleSubmit} */}
         <button
           type="button"
           onClick={handleAttachment}

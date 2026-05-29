@@ -5,6 +5,7 @@ import { setContacts } from "../store/slice/contactSlice";
 import { getUserDisplayMessage } from "../services/chat.service";
 import { addInitialIncomingrequest, addInitialOutgoingrequest } from "../store/slice/friendSlice";
 import { setInitDone } from "../store/slice/appSlice";
+import { addAllLastUsersMessages } from "../store/slice/allUserMessageSlice";
 
 
 export function useAppInit(isAuthenticated) {
@@ -30,6 +31,7 @@ export function useAppInit(isAuthenticated) {
             label: "Loading user display message...",
             fn: async () => {
                 const data = await getUserDisplayMessage();
+                dispatch(addAllLastUsersMessages(data?.data ?? {}));
             }
         },
 
