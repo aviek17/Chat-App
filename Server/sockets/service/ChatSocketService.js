@@ -103,9 +103,9 @@ class ChatSocketService {
       const message = await this.chatRepository.createMessage(messageData);
 
       if (message?.messageId) {
-        this.io.to(senderSocketId).emit('message_sent_successfully', { status: true, message });
+        this.io.to(senderSocketId).emit('message_sent_successfully', { status: true, message,senderId, receiverId });
         if (receiverSocketId) {
-          this.io.to(receiverSocketId).emit('message_received', { message });
+          this.io.to(receiverSocketId).emit('message_received', { message, senderId, receiverId});
         }
       }
 
