@@ -11,6 +11,11 @@ class ChatSocketController {
 
     // Message events
     socket.on('send_message', (data) => this.handleSendMessage(socket, data));
+
+
+    //Message read by user
+    socket.on('message_read', (data) => this.handleMessageRead(socket, data));
+
   }
 
   //User added to Active user list
@@ -31,6 +36,17 @@ class ChatSocketController {
     } catch (error) {
       console.error('Controller - Send message error:', error);
       socket.emit('error', { message: 'Failed to send message' });
+    }
+  }
+
+
+  // Message read handler
+  async handleMessageRead(socket, data) {
+    try{
+        await this.chatSocketService.handleMessageRead(socket, data);
+    }catch(error){
+      log.error('Controller - Message read error:', error);
+      socket.emit('error', { message: 'Failed to update message status' });
     }
   }
 

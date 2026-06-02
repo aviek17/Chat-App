@@ -51,9 +51,6 @@ export function useAppInit(isAuthenticated) {
             }
         },
 
-
-
-
     ];
 
     useEffect(() => {

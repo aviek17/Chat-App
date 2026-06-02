@@ -55,6 +55,26 @@ class ChatSocketService {
         userId
       });
 
+      // fetching all friend for userId to emit their online status to userId's friend list
+      const friends = await this.chatRepository.getFriendIdList(userId);
+
+      if (!friends.length) return;
+
+      // get all users who has sent messages while user was offline
+      const senderIds = await this.chatRepository.getSendersWithPendingMessages(userId);
+
+      const friendIdsSet = new Set(friends);
+
+      senderIds.forEach(senderId => {
+
+        if (!friendIdsSet.has(senderId)) return;
+
+        const senderSocketId = this.activeUsers.get(senderId);
+        if (!senderSocketId) return;
+
+        this.io.to(senderSocketId).emit('user_online', { userId, deliveredAt: new Date() });
+      })
+
       log.success(`User ${userId} authenticated with socket ${socket.id}`);
     } catch (error) {
       console.log(error)
@@ -103,39 +123,27 @@ class ChatSocketService {
       const message = await this.chatRepository.createMessage(messageData);
 
       if (message?.messageId) {
-        this.io.to(senderSocketId).emit('message_sent_successfully', { status: true, message,senderId, receiverId });
+        this.io.to(senderSocketId).emit('message_sent_successfully', { status: true, message, senderId, receiverId });
         if (receiverSocketId) {
-          this.io.to(receiverSocketId).emit('message_received', { message, senderId, receiverId});
+          this.io.to(receiverSocketId).emit('message_received', { message, senderId, receiverId });
         }
       }
-
-
-
-      // const populatedMessage = await this.chatRepository.getMessageById(message._id, [
-      //   { path: 'sender', select: 'username' },
-      //   { path: 'receiver', select: 'username' }
-      // ]);
-
-      // // Emit to sender (confirmation)
-      // socket.emit('message_sent', { message: populatedMessage.content });
-
-      // const receiverSocketId = this.activeUsers.get(receiverId);
-
-      // if (receiverSocketId) {
-      //   
-      //   // await ChatService.markMessagesAsDelivered(senderId, receiverId);
-      //   console.log(`Message delivered to ${receiverId}`);
-      //   socket.emit('message_delivered', {
-      //     messageId: populatedMessage._id,
-      //     receiverId
-      //   });
-      // }
-
-      // this.updateRecentChats([senderId, receiverId]);
 
     } catch (error) {
       console.error('❌ Send message error:', error);
       socket.emit('error', { message: error.message || 'Failed to send message' });
+    }
+  }
+
+
+  //handle message read by user
+  async handleMessageRead(socket, data){
+    try{
+      const response = await this.chatRepository.markMessagesAsRead(data.senderId, socket.userId);
+    }catch(err){
+      console.log(err)
+      log.error('Message read error from here:', err);
+      socket.emit('error', { message: 'Failed to update message status' });
     }
   }
 

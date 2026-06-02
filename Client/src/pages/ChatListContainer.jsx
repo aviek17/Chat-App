@@ -7,6 +7,7 @@ import { ChatEvents } from '../sockets/events/chat';
 import { setSelectedUserInfo, setUserProfilePicture } from '../store/slice/selectedUserSlice';
 import { getBase64FromFile, getStaticImageUrl } from '../services/common.service';
 import { getContactList } from '../services/user.service';
+import { updateuserStatusInMeesageList, updateUserUnreadMsgCount } from '../store/slice/allUserMessageSlice';
 
 
 const formatDateTime = (datetimeStr) => {
@@ -43,6 +44,10 @@ const ChatListContainerExternal = () => {
   const dispatch = useDispatch();
   const contactList = useSelector(state => state.contactList.contacts ?? []);
   const userDisplayMessages = useSelector(state => state.allUsersMsgs);
+
+  console.log("userDisplayMessages", userDisplayMessages)
+
+  const loggedInUserInfo = useSelector(state => state.user?.userInfo);
 
   const contacts = useMemo(() => {
     return contactList.reduce((acc, contact) => {
@@ -81,9 +86,6 @@ const ChatListContainerExternal = () => {
     return messageArray;
 
   }, [contacts, userDisplayMessages])
-
-  console.log("messageList", messages)
-
 
 
   const currentColors = {
@@ -126,6 +128,12 @@ const ChatListContainerExternal = () => {
     dispatch(setSelectedUserInfo(userOnlineStatus));
   }
 
+  const updateUserReadMsgStatus = (receiverId, senderId) => {
+    const data = { senderId };
+    dispatch(updateuserStatusInMeesageList({userId : senderId, newStatus: 'read'}));
+    ChatEvents.onMsgReadStatusUpdate(data);
+  }
+
   const openChatContainer = (userInfo) => {
     let userData = {
       id: userInfo.user.id,
@@ -144,6 +152,11 @@ const ChatListContainerExternal = () => {
     dispatch(setSelectedUserInfo(userData));
 
     dispatch(setSelectedUserInfo(userInfo));
+
+    dispatch(updateUserUnreadMsgCount({ userId: userInfo.user.id, count: 0 }));
+
+    updateUserReadMsgStatus(loggedInUserInfo?.id,userInfo.user.id);
+
     // ChatEvents.onReceivingUserStatus(onReceivingUserStatus);
     // ChatEvents.getUserOnlineStatus({ userId: chatPartner._id });
   }

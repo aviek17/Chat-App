@@ -10,7 +10,7 @@ export class ChatEvents {
     }
 
     static onReceivingUserStatus(callback) {
-        socketManager.on('user_online_status', callback);   
+        socketManager.on('user_online_status', callback);
     }
 
     static offReceivingUserStatus(callback) {
@@ -23,6 +23,18 @@ export class ChatEvents {
 
     static offChatHistoryReceived(callback) {
         socketManager.off('chat_history', callback);
+    }
+
+    static onNewUserOnline(callback) {
+        socketManager.on('user_online', callback);
+    }
+
+    static offNewUserOnline(callback) {
+        socketManager.off('user_online', callback);
+    }
+
+    static onMsgReadStatusUpdate(data) {
+        socketManager.emit('message_read', data);
     }
 
 

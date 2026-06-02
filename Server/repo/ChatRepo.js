@@ -151,61 +151,22 @@ class ChatRepository {
             throw new Error(`Failed to get chat history: ${error.message}`);
         }
     }
-    // async getChatHistory(userId1, userId2, options = {}) {
-    //     try {
-    //         const { page = 1, limit = 50, sortOrder = -1 } = options;
-    //         const skip = (page - 1) * limit;
 
-    //         const messages = await Message.aggregate([
-    //             {
-    //                 $match: {
-    //                     $or: [
-    //                         { sender: new ObjectId(userId1), receiver: new ObjectId(userId2) },
-    //                         { sender: new ObjectId(userId2), receiver: new ObjectId(userId1) }
-    //                     ],
-    //                     isDeleted: false
-    //                 }
-    //             },
-    //             {
-    //                 $lookup: {
-    //                     from: 'users',
-    //                     localField: 'sender',
-    //                     foreignField: '_id',
-    //                     as: 'sender',
-    //                     pipeline: [{ $project: { username: 1 } }]
-    //                 }
-    //             },
-    //             {
-    //                 $lookup: {
-    //                     from: 'users',
-    //                     localField: 'receiver',
-    //                     foreignField: '_id',
-    //                     as: 'receiver',
-    //                     pipeline: [{ $project: { username: 1 } }]
-    //                 }
-    //             },
-    //             {
-    //                 $project: {
-    //                     id: '$_id',
-    //                     content: 1,
-    //                     createdAt: 1,
-    //                     deliveredAt: 1,
-    //                     sender: { $arrayElemAt: ['$sender', 0] },
-    //                     receiver: { $arrayElemAt: ['$receiver', 0] }
-    //                 }
-    //             },
-    //             { $sort: { createdAt: sortOrder } },
-    //             { $skip: skip },
-    //             { $limit: limit }
-    //         ]);
+    // get friend id list for this user
+    async getFriendIdList(userId) {
+        try {
+            const friends = await UserContact.find({
+                userId,
+                isFriend: true,
+                isBlocked: false
+            }).select('contactUserId');
+            return friends.map(f => f.contactUserId.toString());
+        } catch (err) {
+            log.error(`Failed to get friend id list for user ${userId}: ${err.message}`);
+            throw new Error(`Failed to get friend id list for user ${userId}: ${err.message}`);
+        }
+    }
 
-    //         return messages;
-    //     } catch (error) {
-    //         throw new Error(`Failed to get chat history: ${error.message}`);
-    //     }
-    // }
-
-    // Update message status
     async updateMessageStatus(filter, updateData) {
         try {
             const result = await Message.updateMany(filter, {
@@ -214,6 +175,33 @@ class ChatRepository {
             return result.modifiedCount;
         } catch (error) {
             throw new Error(`Failed to update message status: ${error.message}`);
+        }
+    }
+
+
+    // get sender ids based on pending message
+    async getSendersWithPendingMessages(receiverId) {
+        try {
+            const pendingMessages = await Message.find({
+                receiver: receiverId,
+                status: 'sent',
+                isDeleted: false
+            }).select('sender');
+
+            if (!pendingMessages.length) return [];
+
+            await this.updateMessageStatus(
+                { receiver: receiverId, status: 'sent', isDeleted: false },
+                { status: 'delivered', deliveredAt: new Date() }
+            );
+
+            const senderIds = [...new Set(pendingMessages.map(m => m.sender.toString()))];
+
+            return senderIds;
+
+        } catch (err) {
+            log.error(`Failed to get senders with pending messages for receiver ${receiverId}`);
+            throw new Error(`Failed to get senders with pending messages for receiver ${receiverId}`);
         }
     }
 
@@ -253,6 +241,7 @@ class ChatRepository {
 
             return await this.updateMessageStatus(filter, updateData);
         } catch (error) {
+            console.log(error)
             throw new Error(`Failed to mark messages as read: ${error.message}`);
         }
     }
@@ -671,7 +660,7 @@ class ChatRepository {
                 $group: {
                     _id: '$chatPartner',
                     lastMessageId: { $first: '$_id' },
-                    unreadCount: { $sum: '$isUnread' }  
+                    unreadCount: { $sum: '$isUnread' }
                 }
             }
         ]);
@@ -708,7 +697,7 @@ class ChatRepository {
                         status: doc.status
                     }
                 ],
-                unreadCount: m.unreadCount  
+                unreadCount: m.unreadCount
             };
         });
 

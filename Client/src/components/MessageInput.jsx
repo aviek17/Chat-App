@@ -5,6 +5,7 @@ import { useEmojiPicker } from '../hooks/useEmojiPicker';
 import { useDispatch, useSelector } from 'react-redux';
 import { MessageEvents } from '../sockets/events/message';
 import { setUserNewMessage } from '../store/slice/selectedUserSlice';
+import { updateLastestMessageForUser } from '../store/slice/allUserMessageSlice';
 
 const MessageInput = ({ theme, colors, selectedUserId }) => {
   const [message, setMessage] = useState('');
@@ -90,6 +91,7 @@ const MessageInput = ({ theme, colors, selectedUserId }) => {
       console.log("Message sent success:", data);
       if (data.status) {
         dispatch(setUserNewMessage(data.message));
+        dispatch(updateLastestMessageForUser({ userId: data.receiverId, message: data.message }));
       }
     };
 

@@ -42,6 +42,7 @@ const selectedUserSlice = createSlice({
             state.userProfilePicture = initialState.userProfilePicture; 
             state.messages = initialState.messages;
         }
+        
     }
 })
 

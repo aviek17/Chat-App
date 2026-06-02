@@ -24,6 +24,16 @@ const allUserMsgSlice = createSlice({
                 state[userId] = payload[userId];
             });
         },
+        updateLastestMessageForUser: (state, action) => {
+            const { userId, message } = action.payload;
+            console.log("Updating latest message for user:", userId, message);
+            if (state[userId]) {
+                let data = {...state[userId]};
+                console.log("Current messages for user before update:", data.messages);
+                data.messages = [message];
+                state[userId] = data;
+            }
+        },
         getUserMsgFromList: (state, action) => {
             const userId = action.payload;
             return state[userId] || [];
@@ -38,6 +48,26 @@ const allUserMsgSlice = createSlice({
                 state[userId] = [];
             }
         },
+        updateuserStatusInMeesageList: (state, action) => {
+            const { userId, newStatus } = action.payload;
+            if (state[userId]) {
+                let data = {...state[userId]};
+                data.messages = data.messages.map(msg => ({
+                    ...msg,
+                    status: newStatus
+                }));
+                state[userId] = data;
+            }
+
+        },
+        updateUserUnreadMsgCount: (state, action) => {
+            const { userId, count } = action.payload;
+            if (state[userId]) {
+                let data = {...state[userId]};
+                data.unreadCount = count;
+                state[userId] = data;
+            }
+        },
         removeAllMsgList: () => {
             return {};
         },
@@ -45,7 +75,7 @@ const allUserMsgSlice = createSlice({
 });
 
 
-export const { addAllLastUsersMessages, getUserMsgFromList, addUserToMsgList, removeMsgListForUser, removeAllMsgList } = allUserMsgSlice.actions;
+export const { addAllLastUsersMessages, getUserMsgFromList, addUserToMsgList, removeMsgListForUser, removeAllMsgList, updateuserStatusInMeesageList, updateUserUnreadMsgCount, updateLastestMessageForUser } = allUserMsgSlice.actions;
 
 export default allUserMsgSlice.reducer;
 

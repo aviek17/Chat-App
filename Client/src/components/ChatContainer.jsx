@@ -1,10 +1,12 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { colors } from "../styles/theme";
 import { memo, useCallback, useEffect, useState } from "react";
 import ChatHeader from "./ChatHeader";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
 import { ChatEvents } from "../sockets/events/chat";
+import { MessageEvents } from "../sockets/events/message";
+import { setUserNewMessage } from "../store/slice/selectedUserSlice";
 
 
 const mockContact = {
@@ -105,6 +107,7 @@ const ChatContainer = () => {
     const selectedUserInfo = useSelector(state => state.selectedUser.userInfo);
     const selectedUserProfilePic = useSelector(state => state.selectedUser.userProfilePicture);
     const usersMsgsList = useSelector(state => state.allUsersMsgs);
+    const dispatch = useDispatch();
     const [messages, setMessages] = useState(mockMessages);
     const [contact] = useState(mockContact);
 
@@ -116,29 +119,25 @@ const ChatContainer = () => {
 
     const handleNewMessage = useCallback((newMessage) => {
         console.log('New message received in parent:', newMessage);
-        window.alert(`New message: ${newMessage.message}`);
+        dispatch(setUserNewMessage(newMessage?.message));
     }, []);
 
 
-    const handleSendMessage = (newMessage) => {
-        const message = {
-            ...newMessage,
-            id: Date.now(),
-        };
-        setMessages(prev => [...prev, message]);
-    };
 
-    const handleChatHistoryReceived = useCallback((chatHistory) => {
-        console.log('Chat history received:', chatHistory);
-    }, []);
+
+    // const handleChatHistoryReceived = useCallback((chatHistory) => {
+    //     console.log('Chat history received:', chatHistory);
+    // }, []);
 
     useEffect(() => {
-        ChatEvents.onChatHistoryReceived(handleChatHistoryReceived);
+        // ChatEvents.onChatHistoryReceived(handleChatHistoryReceived);
+        MessageEvents.onNewMessage(handleNewMessage);
 
         return () => {
-            ChatEvents.offChatHistoryReceived(handleChatHistoryReceived);
+            // ChatEvents.offChatHistoryReceived(handleChatHistoryReceived);
+            MessageEvents.offNewMessage(handleNewMessage);
         };
-    }, [handleChatHistoryReceived]);
+    }, [handleNewMessage]);
 
     useEffect(() => {
         if (!selectedUserInfo.id) {
