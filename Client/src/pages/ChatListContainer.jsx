@@ -4,10 +4,10 @@ import { colors } from '../styles/theme';
 import { useDispatch, useSelector } from 'react-redux';
 import NewContactContainer from '../components/NewContact';
 import { ChatEvents } from '../sockets/events/chat';
-import { setSelectedUserInfo, setUserProfilePicture } from '../store/slice/selectedUserSlice';
+import { setSelectedUserInfo, setUserMessages, setUserProfilePicture } from '../store/slice/selectedUserSlice';
 import { getBase64FromFile, getStaticImageUrl } from '../services/common.service';
 import { getContactList } from '../services/user.service';
-import { updateuserStatusInMeesageList, updateUserUnreadMsgCount } from '../store/slice/allUserMessageSlice';
+import { resetUserUnreadMsgCount, updateuserStatusInMeesageList, updateUserUnreadMsgCount } from '../store/slice/allUserMessageSlice';
 
 
 const formatDateTime = (datetimeStr) => {
@@ -45,8 +45,6 @@ const ChatListContainerExternal = () => {
   const contactList = useSelector(state => state.contactList.contacts ?? []);
   const userDisplayMessages = useSelector(state => state.allUsersMsgs);
 
-  console.log("userDisplayMessages", userDisplayMessages)
-
   const loggedInUserInfo = useSelector(state => state.user?.userInfo);
 
   const contacts = useMemo(() => {
@@ -58,6 +56,14 @@ const ChatListContainerExternal = () => {
       return acc;
     }, {});
   }, [contactList]);
+
+  const getUserLastMessage = (data) => {
+    if(data && data?.messages && data?.messages?.length > 0){
+      let lastMessageCount = data?.messages?.length - 1;
+      return data?.messages[lastMessageCount];
+    }
+    return {};
+  }
 
 
   const messages = useMemo(() => {
@@ -73,9 +79,9 @@ const ChatListContainerExternal = () => {
         obj['showCheckedIcon'] = false;
         if (userDisplayMessages[id]) {
           obj['showOnMessageList'] = true;
-          obj['lastUserMessage'] = userDisplayMessages[id]?.messages[0] ?? {};
+          obj['lastUserMessage'] = getUserLastMessage(userDisplayMessages[id]);
           obj['unreadCount'] = userDisplayMessages[id]?.unreadCount ?? 0;
-          if (userDisplayMessages[id]?.messages[0]?.sender !== id) {
+          if (getUserLastMessage(userDisplayMessages[id])?.sender !== id) {
             obj['showCheckedIcon'] = true;
           }
         }
@@ -121,17 +127,23 @@ const ChatListContainerExternal = () => {
   };
 
   const onReceivingUserStatus = (data) => {
-    console.log("UserOnline Status Data:", data);
     let userOnlineStatus = {
       isOnline: data.isOnline
     }
     dispatch(setSelectedUserInfo(userOnlineStatus));
   }
 
-  const updateUserReadMsgStatus = (receiverId, senderId) => {
+  const updateUserReadMsgStatus = (senderId) => {
     const data = { senderId };
     dispatch(updateuserStatusInMeesageList({userId : senderId, newStatus: 'read'}));
     ChatEvents.onMsgReadStatusUpdate(data);
+  }
+
+
+  const updateUserMessageList = (userId) => {
+    if(userDisplayMessages[userId] && userDisplayMessages[userId]?.messages && userDisplayMessages[userId]?.messages?.length > 0){
+      dispatch(setUserMessages(userDisplayMessages[userId]?.messages));
+    }
   }
 
   const openChatContainer = (userInfo) => {
@@ -146,16 +158,17 @@ const ChatListContainerExternal = () => {
       nickName: userInfo.contactNickname || ""
     }
     let userPic = userInfo.user.avatar?.filename;
+
     if (userPic) {
       dispatch(setUserProfilePicture(getStaticImageUrl(userPic)));
     }
     dispatch(setSelectedUserInfo(userData));
 
-    dispatch(setSelectedUserInfo(userInfo));
+    dispatch(resetUserUnreadMsgCount({ userId: userInfo.user.id, count: 0 }));
 
-    dispatch(updateUserUnreadMsgCount({ userId: userInfo.user.id, count: 0 }));
+    updateUserReadMsgStatus(userInfo.user.id);
 
-    updateUserReadMsgStatus(loggedInUserInfo?.id,userInfo.user.id);
+    updateUserMessageList(userInfo.user.id);
 
     // ChatEvents.onReceivingUserStatus(onReceivingUserStatus);
     // ChatEvents.getUserOnlineStatus({ userId: chatPartner._id });
@@ -302,8 +315,6 @@ const NewChatContainer = ({ isOpen, onClose, onOpenNewChat }) => {
   const theme = useSelector((state) => state.theme.themeMode);
   const contactList = useSelector((state) => state.contactList?.contacts ?? []);
   const dispatch = useDispatch();
-
-  console.log("Contact List in NewChatContainer:", contactList);
 
 
   const currentColors = {

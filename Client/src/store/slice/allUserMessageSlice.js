@@ -26,11 +26,9 @@ const allUserMsgSlice = createSlice({
         },
         updateLastestMessageForUser: (state, action) => {
             const { userId, message } = action.payload;
-            console.log("Updating latest message for user:", userId, message);
             if (state[userId]) {
                 let data = {...state[userId]};
-                console.log("Current messages for user before update:", data.messages);
-                data.messages = [message];
+                data.messages = [...data.messages, message];
                 state[userId] = data;
             }
         },
@@ -64,6 +62,14 @@ const allUserMsgSlice = createSlice({
             const { userId, count } = action.payload;
             if (state[userId]) {
                 let data = {...state[userId]};
+                data.unreadCount += count;
+                state[userId] = data;
+            }
+        },
+        resetUserUnreadMsgCount: (state, action) => {
+            const { userId, count } = action.payload;
+            if (state[userId]) {
+                let data = {...state[userId]};
                 data.unreadCount = count;
                 state[userId] = data;
             }
@@ -75,7 +81,7 @@ const allUserMsgSlice = createSlice({
 });
 
 
-export const { addAllLastUsersMessages, getUserMsgFromList, addUserToMsgList, removeMsgListForUser, removeAllMsgList, updateuserStatusInMeesageList, updateUserUnreadMsgCount, updateLastestMessageForUser } = allUserMsgSlice.actions;
+export const { addAllLastUsersMessages, getUserMsgFromList, addUserToMsgList, removeMsgListForUser, removeAllMsgList, updateuserStatusInMeesageList, updateUserUnreadMsgCount, updateLastestMessageForUser, resetUserUnreadMsgCount } = allUserMsgSlice.actions;
 
 export default allUserMsgSlice.reducer;
 

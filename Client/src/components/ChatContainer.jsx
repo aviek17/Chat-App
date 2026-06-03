@@ -7,6 +7,7 @@ import MessageInput from "./MessageInput";
 import { ChatEvents } from "../sockets/events/chat";
 import { MessageEvents } from "../sockets/events/message";
 import { setUserNewMessage } from "../store/slice/selectedUserSlice";
+import { updateLastestMessageForUser } from "../store/slice/allUserMessageSlice";
 
 
 const mockContact = {
@@ -117,27 +118,10 @@ const ChatContainer = () => {
         chat: colors.chat[theme]
     };
 
-    const handleNewMessage = useCallback((newMessage) => {
-        console.log('New message received in parent:', newMessage);
-        dispatch(setUserNewMessage(newMessage?.message));
-    }, []);
-
-
-
 
     // const handleChatHistoryReceived = useCallback((chatHistory) => {
     //     console.log('Chat history received:', chatHistory);
     // }, []);
-
-    useEffect(() => {
-        // ChatEvents.onChatHistoryReceived(handleChatHistoryReceived);
-        MessageEvents.onNewMessage(handleNewMessage);
-
-        return () => {
-            // ChatEvents.offChatHistoryReceived(handleChatHistoryReceived);
-            MessageEvents.offNewMessage(handleNewMessage);
-        };
-    }, [handleNewMessage]);
 
     useEffect(() => {
         if (!selectedUserInfo.id) {
@@ -147,12 +131,12 @@ const ChatContainer = () => {
 
         const cachedMessages = usersMsgsList[selectedUserInfo.id];
         if (cachedMessages) {
-            console.log("Using cached messages:", cachedMessages);
+            // console.log("Using cached messages:", cachedMessages);
             // setMessages(cachedMessages);
             return;
         }
 
-        console.log("Fetching chat history for user:", selectedUserInfo.id);
+        // console.log("Fetching chat history for user:", selectedUserInfo.id);
         const data = { otherUserId: selectedUserInfo.id };
         ChatEvents.getChatHistory(data);
 
@@ -196,7 +180,7 @@ const ChatContainer = () => {
             style={{ backgroundColor: currentColors.background.primary }}
         >
             <ChatHeader  contact={selectedUserInfo} profilePic={selectedUserProfilePic} theme={theme} colors={colors} />
-            <MessageList selectedUserId={selectedUserInfo.id} theme={theme} colors={colors} />
+            <MessageList selectedUserId={selectedUserInfo.id} theme={theme} colors={colors} profilePic={selectedUserProfilePic} />
             <MessageInput selectedUserId={selectedUserInfo.id} theme={theme} colors={colors} />
         </div>
     )

@@ -12,6 +12,7 @@ import { UserEvents } from '../sockets/events/user'
 import { setContacts } from '../store/slice/contactSlice'
 import { getContactList } from '../services/user.service'
 import { useCommonApi } from '../hooks/useCommonApi'
+import { useChatSocketEvents } from '../sockets/hooks/useChatSocketEvents'
 
 const MainLayout = () => {
     const dispatch = useDispatch();
@@ -21,6 +22,7 @@ const MainLayout = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     const { initDone, initProgress, initText, initError } = useAppInit(isAuthenticated);
+    useChatSocketEvents(isAuthenticated);
 
     const { getUpdatedContactData, updatedUserDisplayMessage } = useCommonApi();
 
@@ -103,6 +105,7 @@ const MainLayout = () => {
 
     // Show connection status for debugging
     const debugInfo = getDebugInfo();
+
 
     return (
         <div className='bg-[#f3f3f3] h-screen w-full flex flex-col overflow-hidden'>

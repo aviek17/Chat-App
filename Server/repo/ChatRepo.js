@@ -715,6 +715,7 @@ class ChatRepository {
 
         const contactIds = contacts.map(c => c.contactUserId);
 
+        // ── Pipeline 1: last 100 messages per contact (display) ──────────────────
         const messages = await Message.aggregate([
             {
                 $match: {
@@ -749,9 +750,39 @@ class ChatRepository {
                     contactUserId: '$_id',
                     messages: { $slice: ['$messages', 100] }
                 }
+            },
+            {
+                $set: {
+                    messages: { $reverseArray: '$messages' }
+                }
             }
         ]);
 
+        // ── Pipeline 2: unread count per contact ───────────
+        const unreadCounts = await Message.aggregate([
+            {
+                $match: {
+                    receiver: new ObjectId(userId),
+                    sender: { $in: contactIds },
+                    status: { $in: ['sent', 'delivered'] },
+                    isDeleted: false
+                }
+            },
+            {
+                $group: {
+                    _id: '$sender',
+                    unreadCount: { $sum: 1 }
+                }
+            }
+        ]);
+
+        // Map unreadCounts to { contactId: count } for O(1) lookup
+        const unreadMap = {};
+        unreadCounts.forEach(({ _id, unreadCount }) => {
+            unreadMap[_id.toString()] = unreadCount;
+        });
+
+        // ── Merge both results
         const result = {};
 
         messages.forEach(chat => {
@@ -759,12 +790,14 @@ class ChatRepository {
 
             result[contactId] = {
                 messages: chat.messages.map(msg => ({
+                    messageId: msg._id,
                     messageContent: Message.decryptContent(msg.encryptedContent, msg.iv),
                     sender: msg.sender,
                     receiver: msg.receiver,
-                    time: msg.createdAt,
+                    timestamp: msg.createdAt,
                     status: msg.status
-                }))
+                })),
+                unreadCount: unreadMap[contactId] ?? 0
             };
         });
 

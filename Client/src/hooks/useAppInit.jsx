@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getContactList, getContactPendingRequests, getUserPendingRequests } from "../services/user.service";
 import { setContacts } from "../store/slice/contactSlice";
-import { getUserDisplayMessage } from "../services/chat.service";
+import { getUserDisplayMessage, getUserLastMessages } from "../services/chat.service";
 import { addInitialIncomingrequest, addInitialOutgoingrequest } from "../store/slice/friendSlice";
 import { setInitDone } from "../store/slice/appSlice";
 import { addAllLastUsersMessages } from "../store/slice/allUserMessageSlice";
@@ -11,7 +11,7 @@ import { addAllLastUsersMessages } from "../store/slice/allUserMessageSlice";
 export function useAppInit(isAuthenticated) {
     const dispatch = useDispatch();
 
-     const initDone  = useSelector(state => state.app.initDone);
+    const initDone = useSelector(state => state.app.initDone);
 
     const [initLoading, setInitLoading] = useState(false);
     const [initProgress, setInitProgress] = useState(0);
@@ -27,11 +27,20 @@ export function useAppInit(isAuthenticated) {
                 dispatch(setContacts(data?.contacts));
             },
         },
+        // {
+        //     label: "Loading user messages..",
+        //     fn: async () => {
+        //         const data = await getUserDisplayMessage();
+        //         dispatch(addAllLastUsersMessages(data?.data ?? {}));
+        //     }
+        // },
+
         {
-            label: "Loading user display message...",
+            label: "Loading user messages...",
             fn: async () => {
-                const data = await getUserDisplayMessage();
+                const data = await getUserLastMessages();
                 dispatch(addAllLastUsersMessages(data?.data ?? {}));
+
             }
         },
 
@@ -43,7 +52,7 @@ export function useAppInit(isAuthenticated) {
             }
         },
 
-         {
+        {
             label: "Loading contact pending request...",
             fn: async () => {
                 const data = await getContactPendingRequests();
@@ -51,12 +60,13 @@ export function useAppInit(isAuthenticated) {
             }
         },
 
+
     ];
 
     useEffect(() => {
 
         console.log("App init - isAuthenticated:", isAuthenticated, "initDone:", initDone, "initLoading:", initLoading);
-        
+
         if (!isAuthenticated || initDone || initLoading) return;
 
         const runInitApis = async () => {
@@ -84,7 +94,7 @@ export function useAppInit(isAuthenticated) {
                 }
 
                 setInitText('Done!');
-                dispatch(setInitDone()); 
+                dispatch(setInitDone());
 
             } catch (err) {
                 console.error('Init API failed:', err);

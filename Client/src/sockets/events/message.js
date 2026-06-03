@@ -62,7 +62,7 @@ export class MessageEvents {
         socketManager.on('message_deleted', callback);
     }
 
-     static offMessageDeleted(callback) {
+    static offMessageDeleted(callback) {
         socketManager.off('message_deleted', callback);
     }
 

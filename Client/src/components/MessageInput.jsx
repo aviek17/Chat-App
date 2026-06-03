@@ -88,7 +88,6 @@ const MessageInput = ({ theme, colors, selectedUserId }) => {
 
   useEffect(() => {
     const handleMessageSentSuccessfully = (data) => {
-      console.log("Message sent success:", data);
       if (data.status) {
         dispatch(setUserNewMessage(data.message));
         dispatch(updateLastestMessageForUser({ userId: data.receiverId, message: data.message }));
