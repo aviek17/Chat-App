@@ -283,7 +283,6 @@ TalkSphere is a real-time private messaging application that supports:
 - Contact flags: `isPending`, `isFriend`, `isFavorite`, `isBlocked`, `isArchived`, `isMuted`
 
 ### Presence
-- `user_go_online` / `user_go_offline` socket events
 - In-memory `activeUsers` Map on the server tracks `socketId → userId`
 - User status: `online`, `away`, `offline` synced to MongoDB
 - `lastSeen` timestamp updated on disconnect
@@ -346,8 +345,6 @@ All routes are prefixed with the context path: `/talksphere-chat-app`
 |-------|---------|-------------|
 | `authenticate` | `{ userId }` | Register user in active users map |
 | `send_message` | `{ receiverId, content }` | Send a private message |
-| `user_go_online` | `{ userId }` | Mark user as online |
-| `user_go_offline` | — | Mark user as offline |
 | `get_user_profile` | `{ userId }` | Request a user's profile |
 | `update_status` | `{ status }` | Update presence status |
 | `contact_request_accepted` | `{ contactId }` | Notify contact of acceptance |

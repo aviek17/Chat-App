@@ -66,7 +66,7 @@ class SocketConnectionManager {
         socket.on('disconnect', async () => {
             log.info(`Client disconnected: ${socket.id}`);
             try {
-                await this.chatSocketService.handleDisconnect(socket);
+                // await this.chatSocketService.handleDisconnect(socket);
                 await this.userSocketService.handleDisconnect(socket);
             } catch (err) {
                 log.error('Disconnect handler error:', err);

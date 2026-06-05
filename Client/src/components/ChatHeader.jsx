@@ -1,8 +1,21 @@
 
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { Phone, Video, MoreVertical, Search } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 const ChatHeader = ({ contact, profilePic, theme, colors }) => {
+    const onlineFriendList = useSelector(
+        ({ friendList }) => friendList?.onlineFriendList || []
+    );
+
+
+    const onlineFriendSet = useMemo(
+        () => new Set(onlineFriendList),
+        [onlineFriendList]
+    );
+
+    const isFriendOnline = onlineFriendSet.has(contact.id);
+
     const currentColors = {
         background: colors.background[theme],
         text: colors.text[theme],
@@ -28,11 +41,11 @@ const ChatHeader = ({ contact, profilePic, theme, colors }) => {
             <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 border-2 relative"
                     style={{
-                        borderColor: getStatusColor(contact.isOnline)
+                        borderColor: getStatusColor(isFriendOnline)
                     }}>
                     <div
                         className="w-3 h-3 rounded-full absolute bottom-[-3px] right-[-3px] border-2 border-white"
-                        style={{ backgroundColor: getStatusColor(contact.isOnline) }}
+                        style={{ backgroundColor: getStatusColor(isFriendOnline) }}
                     />
                     <div className="w-8 h-8 rounded-full bg-[#005498] flex items-center justify-center overflow-hidden">
                         {profilePic ? (

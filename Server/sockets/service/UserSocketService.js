@@ -1,10 +1,12 @@
 const UserRepo = require('../../repo/UserRepo');
+const ChatRepository = require('../../repo/ChatRepo');
 const log = require('../../utils/logger');
 
 class UserSocketService {
   constructor(io, { activeUsers } = {}) {
     this.io = io;
     this.userRepo = UserRepo;
+    this.chatRepository = ChatRepository;
     this.activeUsers = activeUsers ?? new Map();
   }
 
@@ -12,26 +14,24 @@ class UserSocketService {
     log.success('UserSocketService started');
   }
 
-  async handleUserOnline(socket, data) {
+  // user active friend list
+  async handleUserOnlineFriendList(socket) {
+    log.info(`Sending Friend List for user ${socket.userId} `);
+    const userId = socket.userId;
+    const userSocketId = this.activeUsers.get(userId);
+
     try {
-      const { userId } = data;
+      const friends = await this.chatRepository.getFriendIdList(userId);
 
-      if (!userId) {
-        socket.emit('error', { message: 'User ID required' });
-        return;
-      }
+      if (!friends.length) return;
 
-      this.activeUsers.set(userId, socket.id);
-      socket.userId = userId;
+      const onlineFriendIds = friends.filter(friendId => this.activeUsers.has(friendId));
 
-      log.success(`User ${userId} is now online — socket ${socket.id}`);
+      this.io.to(userSocketId).emit('current_online_friends', { onlineUserIds: onlineFriendIds });
 
-      // Notify contacts that this user came online
-      await this._broadcastPresence(userId, 'online');
 
-    } catch (error) {
-      log.error('UserSocketService - handleUserOnline error:', error);
-      socket.emit('error', { message: 'Failed to mark user as online' });
+    } catch (err) {
+      log.error('Active Friend Service Error', err.message);
     }
   }
 
@@ -58,9 +58,23 @@ class UserSocketService {
 
       this.activeUsers.delete(userId);
 
-      log.info(`User ${userId} disconnected — socket ${socket.id}`);
+      await this.chatRepository.updateUserOnlineStatus(userId, false);
 
-      await this._broadcastPresence(userId, 'offline');
+      log.success(`User ${userId} went offline — socket ${socket.id}`);
+
+      const friends = await this.chatRepository.getFriendIdList(userId);
+
+      if (!friends.length) return;
+
+      friends.forEach(friendId => {
+        const key = friendId.toString();
+        const friendSocketId = this.activeUsers.get(key);
+
+        if (!friendSocketId) return;
+        this.io.to(friendSocketId).emit('user_went_offline', { userId });
+      });
+
+      log.success(`User ${userId} went offline informed to friends`);
 
     } catch (error) {
       log.error('UserSocketService - handleDisconnect error:', error);

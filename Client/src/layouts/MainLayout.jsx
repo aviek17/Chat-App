@@ -13,6 +13,7 @@ import { setContacts } from '../store/slice/contactSlice'
 import { getContactList } from '../services/user.service'
 import { useCommonApi } from '../hooks/useCommonApi'
 import { useChatSocketEvents } from '../sockets/hooks/useChatSocketEvents'
+import { useUserSocketEvents } from '../sockets/hooks/useUserSocketEvents'
 
 const MainLayout = () => {
     const dispatch = useDispatch();
@@ -23,6 +24,7 @@ const MainLayout = () => {
 
     const { initDone, initProgress, initText, initError } = useAppInit(isAuthenticated);
     useChatSocketEvents(isAuthenticated);
+    useUserSocketEvents(isAuthenticated);
 
     const { getUpdatedContactData, updatedUserDisplayMessage } = useCommonApi();
 

@@ -60,6 +60,12 @@ class ChatSocketService {
 
       if (!friends.length) return;
 
+      friends.forEach(friendId => {
+        const friendSocketId = this.activeUsers.get(friendId);
+        if (!friendSocketId) return; 
+        this.io.to(friendSocketId).emit('new_user_online', { userId });
+      });
+
       // get all users who has sent messages while user was offline
       const senderIds = await this.chatRepository.getSendersWithPendingMessages(userId);
 
@@ -72,7 +78,7 @@ class ChatSocketService {
         const senderSocketId = this.activeUsers.get(senderId);
         if (!senderSocketId) return;
 
-        this.io.to(senderSocketId).emit('user_online', { userId, deliveredAt: new Date() });
+        this.io.to(senderSocketId).emit('user_update_message_status_delivered', { userId, deliveredAt: new Date() });
       })
 
       log.success(`User ${userId} authenticated with socket ${socket.id}`);
@@ -137,10 +143,10 @@ class ChatSocketService {
 
 
   //handle message read by user
-  async handleMessageRead(socket, data){
-    try{
+  async handleMessageRead(socket, data) {
+    try {
       const response = await this.chatRepository.markMessagesAsRead(data.senderId, socket.userId);
-    }catch(err){
+    } catch (err) {
       console.log(err)
       log.error('Message read error from here:', err);
       socket.emit('error', { message: 'Failed to update message status' });
@@ -183,10 +189,10 @@ class ChatSocketService {
         // this.userRooms.delete(userId);
 
         // Update user offline status
-        await this.chatRepository.updateUserOnlineStatus(userId, false);
+        // await this.chatRepository.updateUserOnlineStatus(userId, false);
         // this.broadcastUserStatus(userId, 'offline');
 
-        console.log(`🔴 User ${userId} disconnected`);
+        console.log(`ChatSocketService - User ${userId} disconnected`);
       }
 
     } catch (error) {

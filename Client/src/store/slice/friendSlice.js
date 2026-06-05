@@ -6,7 +6,8 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
     incomingFriendRequestList: [],
-    outgoingFriendRequestList: []
+    outgoingFriendRequestList: [],
+    onlineFriendList: []
 }
 
 const friendSlice = createSlice({
@@ -48,18 +49,34 @@ const friendSlice = createSlice({
             if (requestIndex !== -1) {
                 existingOutgoingRequest[requestIndex] = permObj;
                 state.outgoingFriendRequestList = existingOutgoingRequest;
-            }else{
+            } else {
                 state.outgoingFriendRequestList.push(permObj);
             }
         },
         cancelSentFriendRequest: (state, action) => {
             const requestId = action.payload;
             state.outgoingFriendRequestList = state.outgoingFriendRequestList.filter(request => request.id !== requestId);
+        },
+        setOnlineFriends: (state, action) => {
+            state.onlineFriendList = action.payload || [];
+        },
+        addOnlineFriend: (state, action) => {
+            const userId = action.payload;
+            if (!state.onlineFriendList.includes(userId)) {
+                state.onlineFriendList.push(userId);
+            }
+        },
+        removeOnlineFriend: (state, action) => {
+            const userId = action.payload;
+            state.onlineFriendList = state.onlineFriendList.filter(id => id !== userId);
         }
 
     }
 });
 
-export const { setPendingFriends,addInitialOutgoingrequest,addInitialIncomingrequest, addIncomingFriendRequest, acceptFriendRequest, rejectFriendrequest, addTempOutgoingFriendRequest, addPermanentOutgoingFriendRequest, cancelSentFriendRequest } = friendSlice.actions;
+export const { setPendingFriends, addInitialOutgoingrequest, addInitialIncomingrequest,
+    addIncomingFriendRequest, acceptFriendRequest, rejectFriendrequest, addTempOutgoingFriendRequest,
+    addPermanentOutgoingFriendRequest, cancelSentFriendRequest, addOnlineFriend, removeOnlineFriend,
+    setOnlineFriends } = friendSlice.actions;
 
 export default friendSlice.reducer;

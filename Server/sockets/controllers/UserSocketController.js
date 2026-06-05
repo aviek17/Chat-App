@@ -6,10 +6,6 @@ class UserSocketController {
   // Initialize all user-related event handlers for a socket connection
   initializeEventHandlers(socket) {
 
-    // Presence events
-    socket.on('user_go_online',   (data) => this.handleGoOnline(socket, data));
-    socket.on('user_go_offline',  ()     => this.handleGoOffline(socket));
-
     // Profile events
     socket.on('get_user_profile', (data) => this.handleGetUserProfile(socket, data));
     socket.on('update_status',    (data) => this.handleUpdateStatus(socket, data));
@@ -22,30 +18,14 @@ class UserSocketController {
     socket.on('check_user_online',  (data) => this.handleCheckUserOnline(socket, data));
     socket.on('get_online_contacts', ()    => this.handleGetOnlineContacts(socket));
 
+
+    // Users Online friend List
+    socket.on('user_friends_list', () => this.handleGetUserFriendsList(socket));
+
     // Connection events
-    socket.on('disconnect', () => this.handleDisconnect(socket));
+    // socket.on('disconnect', () => this.handleDisconnect(socket));
     socket.on('error',      (error) => this.handleSocketError(socket, error));
     socket.on('ping',       () => this.handlePing(socket));
-  }
-
-
-  // ─── Presence ────────────────────────────────────────────────────────────────
-
-  async handleGoOnline(socket, data) {
-    try {
-      await this.userSocketService.handleUserOnline(socket, data);
-    } catch (error) {
-      console.error('UserSocketController - Go online error:', error);
-      socket.emit('error', { message: 'Failed to mark user as online' });
-    }
-  }
-
-  async handleGoOffline(socket) {
-    try {
-      await this.userSocketService.handleUserOffline(socket);
-    } catch (error) {
-      console.error('UserSocketController - Go offline error:', error);
-    }
   }
 
 
@@ -66,6 +46,16 @@ class UserSocketController {
     } catch (error) {
       console.error('UserSocketController - Update status error:', error);
       socket.emit('error', { message: 'Failed to update status' });
+    }
+  }
+
+  // Users Online friend list
+  async handleGetUserFriendsList(socket){
+    try{
+      await this.userSocketService.handleUserOnlineFriendList(socket);
+    }catch(err){
+      console.error('UserSocketController - Update user friend list:', error);
+      socket.emit('error', { message: 'Failed to send users friend list' });
     }
   }
 
@@ -132,13 +122,13 @@ class UserSocketController {
 
   // ─── Connection ───────────────────────────────────────────────────────────────
 
-  async handleDisconnect(socket) {
-    try {
-      await this.userSocketService.handleDisconnect(socket);
-    } catch (error) {
-      console.error('UserSocketController - Disconnect error:', error);
-    }
-  }
+  // async handleDisconnect(socket) {
+  //   try {
+  //     await this.userSocketService.handleDisconnect(socket);
+  //   } catch (error) {
+  //     console.error('UserSocketController - Disconnect error:', error);
+  //   }
+  // }
 
   handleSocketError(socket, error) {
     console.error('UserSocketController - Socket error:', error);
@@ -156,8 +146,6 @@ class UserSocketController {
 
   getEventHandlers() {
     return [
-      'user_go_online',
-      'user_go_offline',
       'get_user_profile',
       'update_status',
       'contact_request_accepted',

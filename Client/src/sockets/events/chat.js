@@ -25,12 +25,12 @@ export class ChatEvents {
         socketManager.off('chat_history', callback);
     }
 
-    static onNewUserOnline(callback) {
-        socketManager.on('user_online', callback);
+    static onNewUserMessageStatusUpdateDelivered(callback) {
+        socketManager.on('user_update_message_status_delivered', callback);
     }
 
-    static offNewUserOnline(callback) {
-        socketManager.off('user_online', callback);
+    static offNewUserMessageStatusUpdateDelivered(callback) {
+        socketManager.off('user_update_message_status_delivered', callback);
     }
 
     static onMsgReadStatusUpdate(data) {
