@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { MessageEvents } from '../events/message';
 import { UserEvents } from "../events/user";
 import { addOnlineFriend, removeOnlineFriend, setOnlineFriends } from "../../store/slice/friendSlice";
+import { addContact } from "../../store/slice/contactSlice";
 
 export const useUserSocketEvents = (isAuthenticated) => {
     const dispatch = useDispatch();
@@ -37,16 +38,23 @@ export const useUserSocketEvents = (isAuthenticated) => {
             dispatch(removeOnlineFriend(data?.userId));
         }
 
+        const handleAcceptRequest = async (data) => {
+           UserEvents.getFriendList();
+           dispatch(addContact(data?.userInfo));
+        };
+
         UserEvents.getFriendList();
         UserEvents.getCurrentActiveFriends(handleCurrentOnlineFriendList);
         UserEvents.onNewUserOnline(handleNewFriendCameOnline);
         UserEvents.onUserOffline(handleOnUserWentOffline);
+        UserEvents.onAcceptingRequest(handleAcceptRequest);
 
 
         return () => {
             UserEvents.removeCurrentActiveFriends(handleCurrentOnlineFriendList);
             UserEvents.offNewUserOnline(handleNewFriendCameOnline);
             UserEvents.offUserOffline(handleOnUserWentOffline);
+            UserEvents.removeAcceptingRequest(handleAcceptRequest);
         }
 
     }, [isAuthenticated])

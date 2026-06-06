@@ -3,14 +3,14 @@ import MessageBubble from './MessageBubble';
 import { useSelector } from 'react-redux';
 
 const MessageList = ({ selectedUserId, theme, colors, profilePic }) => {
-  const messagesEndRef   = useRef(null);
+  const messagesEndRef = useRef(null);
   const scrollTimeoutRef = useRef(null);
-  const messages         = useSelector(state => state.selectedUser.messages);
-
+  const messages = useSelector(state => state?.selectedUser?.messages ?? []);
+  
   const currentColors = {
     background: colors.background[theme],
-    text:       colors.text[theme],
-    chat:       colors.chat[theme]
+    text: colors.text[theme],
+    chat: colors.chat[theme]
   };
 
   const scrollToBottom = useCallback(() => {
@@ -23,7 +23,7 @@ const MessageList = ({ selectedUserId, theme, colors, profilePic }) => {
 
   const handleScroll = () => {
     if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-    scrollTimeoutRef.current = setTimeout(() => {}, 1000);
+    scrollTimeoutRef.current = setTimeout(() => { }, 1000);
   };
 
   const isSentByMe = (message) => message.sender !== selectedUserId;
@@ -34,13 +34,19 @@ const MessageList = ({ selectedUserId, theme, colors, profilePic }) => {
     const messageDate = new Date(timestamp);
     if (isNaN(messageDate.getTime())) return null;
 
-    const today     = new Date();
+    const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (messageDate.toDateString() === today.toDateString())     return 'Today';
+    if (messageDate.toDateString() === today.toDateString()) return 'Today';
     if (messageDate.toDateString() === yesterday.toDateString()) return 'Yesterday';
     return messageDate.toLocaleDateString();
+  };
+
+  const generateRandomHex = (length = 8) => {
+    return [...crypto.getRandomValues(new Uint8Array(length))]
+      .map(byte => byte.toString(16).padStart(2, '0'))
+      .join('');
   };
 
   // ─── Build flat render list ───────────────────────────────────────────────
@@ -87,7 +93,7 @@ const MessageList = ({ selectedUserId, theme, colors, profilePic }) => {
         className="flex items-center justify-center h-[calc(100vh-180px)]"
         style={{ backgroundColor: currentColors.background.secondary }}
       >
-        <p className="text-sm" style={{ color: currentColors.text.secondary }}>
+        <p className="text-[16px] text-[#005498] font-[600]">
           No messages yet. Say hello! 👋
         </p>
       </div>
@@ -112,12 +118,12 @@ const MessageList = ({ selectedUserId, theme, colors, profilePic }) => {
 
           if (item.type === 'date') {
             return (
-              <div key={`date-${item.label}`} className="flex justify-center my-3">
+              <div key={`date-${generateRandomHex()}`} className="flex justify-center my-3">
                 <div
                   className="px-3 py-1 rounded-full text-xs font-medium"
                   style={{
                     backgroundColor: currentColors.background.elevated,
-                    color:           currentColors.text.secondary
+                    color: currentColors.text.secondary
                   }}
                 >
                   {item.label}

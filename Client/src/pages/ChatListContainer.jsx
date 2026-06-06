@@ -58,7 +58,7 @@ const ChatListContainerExternal = () => {
   }, [contactList]);
 
   const getUserLastMessage = (data) => {
-    if(data && data?.messages && data?.messages?.length > 0){
+    if (data && data?.messages && data?.messages?.length > 0) {
       let lastMessageCount = data?.messages?.length - 1;
       return data?.messages[lastMessageCount];
     }
@@ -84,8 +84,9 @@ const ChatListContainerExternal = () => {
           if (getUserLastMessage(userDisplayMessages[id])?.sender !== id) {
             obj['showCheckedIcon'] = true;
           }
+          messageArray.push(obj);
         }
-        messageArray.push(obj);
+
       })
     }
 
@@ -135,13 +136,13 @@ const ChatListContainerExternal = () => {
 
   const updateUserReadMsgStatus = (senderId) => {
     const data = { senderId };
-    dispatch(updateuserStatusInMeesageList({userId : senderId, newStatus: 'read'}));
+    dispatch(updateuserStatusInMeesageList({ userId: senderId, newStatus: 'read' }));
     ChatEvents.onMsgReadStatusUpdate(data);
   }
 
 
   const updateUserMessageList = (userId) => {
-    if(userDisplayMessages[userId] && userDisplayMessages[userId]?.messages && userDisplayMessages[userId]?.messages?.length > 0){
+    if (userDisplayMessages[userId] && userDisplayMessages[userId]?.messages && userDisplayMessages[userId]?.messages?.length > 0) {
       dispatch(setUserMessages(userDisplayMessages[userId]?.messages));
     }
   }
@@ -297,7 +298,7 @@ const ChatListContainerExternal = () => {
 
       <div className='h-[15px]'></div>
 
-      <NewChatContainer isOpen={newChatOpen} onClose={() => { setNewChatOpen(false) }} onOpenNewChat={() => { setNewContactOpen(true) }} />
+      <NewChatContainer isOpen={newChatOpen} onClose={() => { setNewChatOpen(false) }} onOpenNewChat={() => { setNewContactOpen(true) }} openChatContainer={(userInfo)=>{openChatContainer(userInfo)}} />
 
       <MoreOptionContainer isOpen={moreOtionsOpen} onClose={() => { setMoreOptionsOpen(false) }} />
 
@@ -311,7 +312,7 @@ export default memo(ChatListContainerExternal)
 
 
 
-const NewChatContainer = ({ isOpen, onClose, onOpenNewChat }) => {
+const NewChatContainer = ({ isOpen, onClose, onOpenNewChat, openChatContainer }) => {
   const theme = useSelector((state) => state.theme.themeMode);
   const contactList = useSelector((state) => state.contactList?.contacts ?? []);
   const dispatch = useDispatch();
@@ -330,23 +331,10 @@ const NewChatContainer = ({ isOpen, onClose, onOpenNewChat }) => {
   }
 
   const onNewChatInitiationClick = (userInfo) => {
-    let userData = {
-      id: userInfo.user.id,
-      displayName: userInfo.user.displayName,
-      bio: userInfo.user.bio,
-      phoneNo: userInfo.user.phoneNumber,
-      email: "",
-      isOnline: false,
-      username: userInfo.user.username,
-      nickName: userInfo.contactNickname || ""
-    }
-    let userPic = userInfo.user.avatar?.filename;
-    if (userPic) {
-      dispatch(setUserProfilePicture(getStaticImageUrl(userPic)));
-    }
-    dispatch(setSelectedUserInfo(userData));
+    openChatContainer(userInfo);
     onClose();
   }
+
 
   if (!isOpen) return null;
 

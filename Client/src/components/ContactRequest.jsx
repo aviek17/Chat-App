@@ -3,8 +3,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { getStaticImageUrl } from "../services/common.service";
 import { getContactList, requestApproval } from "../services/user.service";
 import { acceptFriendRequest, rejectFriendrequest } from "../store/slice/friendSlice";
-import { setContacts } from "../store/slice/contactSlice";
+import { addContact, setContacts } from "../store/slice/contactSlice";
 import { useCommonApi } from "../hooks/useCommonApi";
+import { UserEvents } from "../sockets/events/user";
 
 const contacts = [
     { id: 1, name: "Mazumder Khushi", mutual: null, followed: null },
@@ -60,11 +61,9 @@ function ContactCard({ contact, requestType = "pending" }) {
     const [toast, setToast] = useState({ visible: false, message: "" });
     const dispatch = useDispatch();
 
-    const { getUpdatedContactData, updatedUserDisplayMessage } = useCommonApi();
 
-    const handleAcceptRequest = async (data) => {
-        await getUpdatedContactData();
-        await updatedUserDisplayMessage(data);
+    const handleAcceptRequest = async () => {
+        UserEvents.getFriendList();
     };
 
 
@@ -84,6 +83,7 @@ function ContactCard({ contact, requestType = "pending" }) {
             if (response.success) {
                 showToast("Friend request accepted");
                 dispatch(acceptFriendRequest(contact?.id));
+                dispatch(addContact(response?.userInfo));
                 handleAcceptRequest();
             }
         } catch (err) {

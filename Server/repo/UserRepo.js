@@ -72,7 +72,7 @@ const updateProfilePhoto = async (userData, photoData) => {
 
 const userInfoOnPhoneNumber = async (userid, phoneNumber) => {
 
-  console.log( "user ID:", userid);
+  console.log("user ID:", userid);
 
   const currentUserObjectId = new mongoose.Types.ObjectId(userid.id);
 
@@ -224,7 +224,7 @@ const addNewContacts = async (userData, contactData) => {
   };
 
 
-  return {contactResultReceiver, contactResultSender};
+  return { contactResultReceiver, contactResultSender };
 }
 
 
@@ -350,18 +350,22 @@ const acceptUserRequest = async (userId, contactUserId) => {
   session.startTransaction();
 
   try {
-    const senderUserInfo = await User.findById(senderUserId);
-    if (!senderUserInfo) {
-      throw new Error('Sender user not found');
-    }
+    // Fetch both users with avatar
+    const [senderUserInfo, acceptorUserInfo] = await Promise.all([
+      User.findById(senderUserId).populate({ path: 'profilePicture', select: 'filename path storageType url' }),
+      User.findById(acceptorUserId).populate({ path: 'profilePicture', select: 'filename path storageType url' })
+    ]);
+
+    if (!senderUserInfo) throw new Error('Sender user not found');
+    if (!acceptorUserInfo) throw new Error('Acceptor user not found');
+
     const acceptorRow = await userContact.findOneAndUpdate(
       { userId: acceptorUserId, contactUserId: senderUserId, isPending: true },
       { $set: { isPending: false, contactNickname: senderUserInfo.displayName, isFriend: true } },
       { new: true, session }
     );
-    if (!acceptorRow) {
-      throw new Error('No pending request found');
-    }
+
+    if (!acceptorRow) throw new Error('No pending request found');
 
     const senderRow = await userContact.findOneAndUpdate(
       { userId: senderUserId, contactUserId: acceptorUserId },
@@ -369,13 +373,40 @@ const acceptUserRequest = async (userId, contactUserId) => {
       { new: true, session }
     );
 
-    if (!senderRow) {
-      throw new Error('Sender contact row not found');
-    }
+    if (!senderRow) throw new Error('Sender contact row not found');
 
     await session.commitTransaction();
     logger.info(`Request accepted by ${acceptorUserId} sent by ${senderUserId}`);
-    return { success: true, message: 'Contact request accepted' };
+
+    const buildUserInfo = (contactRow, userDoc) => {
+      const pic = userDoc.profilePicture;
+      return {
+        contactNickname: contactRow.contactNickname,
+        isArchived: contactRow.isArchived,
+        isBlocked: contactRow.isBlocked,
+        isFavorite: contactRow.isFavorite,
+        isMuted: contactRow.isMuted,
+        user: {
+          id: userDoc._id,
+          uid: userDoc.uid,
+          displayName: userDoc.displayName,
+          username: userDoc.username,
+          bio: userDoc.bio,
+          phoneNumber: userDoc.phoneNumber,
+          avatar: pic ? {
+            filename: pic.filename,
+            path: pic.path,
+            storageType: pic.storageType
+          } : null
+        }
+      };
+    };
+
+    return {
+      success: true,
+      userInfo : buildUserInfo(acceptorRow, senderUserInfo),       
+      senderUserInfo : buildUserInfo(senderRow, acceptorUserInfo)  
+    };
 
   } catch (err) {
     await session.abortTransaction();
@@ -384,7 +415,7 @@ const acceptUserRequest = async (userId, contactUserId) => {
   } finally {
     session.endSession();
   }
-}
+};
 
 
 const rejectUserRequest = async (userId, contactUserId) => {

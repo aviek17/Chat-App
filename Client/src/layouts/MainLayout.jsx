@@ -26,13 +26,6 @@ const MainLayout = () => {
     useChatSocketEvents(isAuthenticated);
     useUserSocketEvents(isAuthenticated);
 
-    const { getUpdatedContactData, updatedUserDisplayMessage } = useCommonApi();
-
-    const handleAcceptRequest = async (data) => {
-        await getUpdatedContactData();
-        await updatedUserDisplayMessage(data);
-    };
-
 
     useEffect(() => {
 
@@ -81,14 +74,12 @@ const MainLayout = () => {
             if (isConnected && userInfo?.id && !authAttempted) {
                 AuthEvents.authenticate({ userId: userInfo.id });
                 setAuthAttempted(true);
-                //Get updated contact data after accepting or rejecting the request
-                UserEvents.onAcceptingRequest(handleAcceptRequest);
             }
         }, 100);
 
         return () => {
             AuthEvents.removeAuthListeners();
-            UserEvents.removeAcceptingRequest(handleAcceptRequest);
+                
         };
 
     }, [isConnected, userInfo?.id, connectionError]);

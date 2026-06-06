@@ -167,11 +167,9 @@ class UserSocketService {
     }
   }
 
-  async handleRequestAccepted(acceptorUserInfo, senderUserId) {
+  async handleRequestAccepted(acceptorUserInfo, senderUserId, contactInfo) {
     try {
       const userSocketId = this.activeUsers.get(senderUserId);
-
-      console.log("Notifying user", senderUserId, "about acceptance. Socket ID:", userSocketId);
 
       if (userSocketId) {
         this.io.to(userSocketId).emit('contact_request_accepted', {
@@ -179,7 +177,8 @@ class UserSocketService {
             requestFrom: acceptorUserInfo?.displayName
           },
           timestamp: Date.now(),
-          message: `Request accepted by ${acceptorUserInfo?.displayName}`
+          message: `Request accepted by ${acceptorUserInfo?.displayName}`,
+          userInfo : contactInfo
         });
       }
     } catch (err) {

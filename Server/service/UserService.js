@@ -138,39 +138,36 @@ const getContactList = async (userInfo) => {
 
 const userRequestApproval = async (userInfo, requestInfo) => {
     const userId = userInfo?.id;
-    if (!userId) {
-        throw new Error("User not found");
-    }
-    if (!requestInfo?.contactUserId) {
-        throw new Error("Friend user id is required");
-    }
+    if (!userId) throw new Error("User not found");
+    if (!requestInfo?.contactUserId) throw new Error("Friend user id is required");
     if (!requestInfo?.action || !['accept', 'reject', 'cancel'].includes(requestInfo.action)) {
         throw new Error("Invalid action. Must be 'accept', 'reject', or 'cancel'");
     }
-    let result = null;
+
     const userSocketService = getUserSocketService();
+    let result = null;
+
     if (requestInfo.action === 'accept') {
-        result = await acceptUserRequest(userId, requestInfo.contactUserId);
-        console.log(result)
-         // notify the contact user id about user id that request is accepted
-        if(result.success && userSocketService) {
-            userSocketService.handleRequestAccepted(userInfo, requestInfo.contactUserId);
+        const { senderUserInfo, ...acceptResult } = await acceptUserRequest(userId, requestInfo.contactUserId);
+        result = acceptResult;
+
+        if (result.success && userSocketService) {
+            userSocketService.handleRequestAccepted(userInfo, requestInfo.contactUserId, senderUserInfo);
         }
-    
     }
     else if (requestInfo.action === 'reject') {
         result = await rejectUserRequest(userId, requestInfo.contactUserId);
-        // notify the contact user id about user id that request is rejected
-        if(result.success && userSocketService) {
+
+        if (result.success && userSocketService) {
             userSocketService.handleRequestRejected(userInfo, requestInfo.contactUserId);
         }
     }
-
-    else if(requestInfo.action === 'cancel') {
-        
+    else if (requestInfo.action === 'cancel') {
+        // your cancel logic here
     }
+
     return result;
-}
+};
 
 const userPendingRequest = async (userInfo) => {
     const userId = userInfo?.id;

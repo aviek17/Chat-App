@@ -30,6 +30,12 @@ const allUserMsgSlice = createSlice({
                 let data = {...state[userId]};
                 data.messages = [...data.messages, message];
                 state[userId] = data;
+            }else{
+                let obj = {};
+                obj["unreadCount"] = 1;
+                obj["messages"] = [message];
+                state[userId] = obj;
+                
             }
         },
         getUserMsgFromList: (state, action) => {
