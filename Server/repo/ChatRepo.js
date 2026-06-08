@@ -1,9 +1,9 @@
-const Message = require('../models/chats/PrivateChat/privateMessage');
+const Message = require('../models/PrivateMessage');
 //const MessageAttachment = require('../models/MessageAttachment');
 const User = require('../models/User');
 const { ObjectId } = require('mongoose').Types;
 const crypto = require('crypto');
-const UserContact = require("../models/chats/PrivateChat/userContact");
+const UserContact = require("../models/UserContact");
 
 
 const ENCRYPTION_KEY = Buffer.from(process.env.MESSAGE_ENCRYPTION_KEY, 'hex');
@@ -102,63 +102,13 @@ class ChatRepository {
         }
     }
 
-    // Get message by ID with population
-    async getMessageById(messageId, populateOptions = []) {
-        try {
-            let query = Message.findById(messageId);
-
-            populateOptions.forEach(option => {
-                query = query.populate(option.path, option.select);
-            });
-
-            return await query.exec();
-        } catch (error) {
-            throw new Error(`Failed to get message by ID: ${error.message}`);
-        }
-    }
-
-    // Get chat history between two users
-    async getChatHistory(userId1, userId2, options = {}) {
-        try {
-            const { page = 1, limit = 50, sortOrder = -1 } = options;
-            const skip = (page - 1) * limit;
-
-            const messages = await Message.find({
-                $or: [
-                    { sender: userId1, receiver: userId2 },
-                    { sender: userId2, receiver: userId1 }
-                ],
-                isDeleted: false
-            })
-                .populate('sender', 'username')
-                .populate('receiver', 'username')
-                // .populate('attachment') 
-                .select('content createdAt deliveredAt _id sender receiver encryptedContent iv status')
-                .sort({ createdAt: sortOrder })
-                .skip(skip)
-                .limit(limit);
-
-            return messages.map(message => ({
-                id: message._id,
-                content: message.content,
-                createdAt: message.createdAt,
-                deliveredAt: message.deliveredAt,
-                sender: message.sender,
-                receiver: message.receiver,
-                status: message.status
-            }));
-        } catch (error) {
-            throw new Error(`Failed to get chat history: ${error.message}`);
-        }
-    }
 
     // get friend id list for this user
     async getFriendIdList(userId) {
         try {
             const friends = await UserContact.find({
                 userId,
-                isFriend: true,
-                isBlocked: false
+                isFriend: true
             }).select('contactUserId');
             return friends.map(f => f.contactUserId.toString());
         } catch (err) {
@@ -176,6 +126,199 @@ class ChatRepository {
         } catch (error) {
             throw new Error(`Failed to update message status: ${error.message}`);
         }
+    }
+
+        //User Display Message
+    async getUserDisplayMessage(userId) {
+
+        const contacts = await UserContact.find({
+            userId: new ObjectId(userId),
+            isFriend: true
+        }).select('contactUserId');
+
+        if (!contacts.length) return {};
+
+        const contactIds = contacts.map(c => c.contactUserId);
+
+        const messages = await Message.aggregate([
+            {
+                $match: {
+                    isDeleted: false,
+                    $or: [
+                        { sender: new ObjectId(userId), receiver: { $in: contactIds } },
+                        { receiver: new ObjectId(userId), sender: { $in: contactIds } }
+                    ]
+                }
+            },
+            {
+                $addFields: {
+                    chatPartner: {
+                        $cond: {
+                            if: { $eq: ['$sender', new ObjectId(userId)] },
+                            then: '$receiver',
+                            else: '$sender'
+                        }
+                    },
+                    isUnread: {
+                        $cond: {
+                            if: {
+                                $and: [
+                                    { $eq: ['$receiver', new ObjectId(userId)] },
+                                    { $eq: ['$status', 'delivered'] }
+                                ]
+                            },
+                            then: 1,
+                            else: 0
+                        }
+                    }
+                }
+            },
+            { $sort: { createdAt: -1 } },
+            {
+                $group: {
+                    _id: '$chatPartner',
+                    lastMessageId: { $first: '$_id' },
+                    unreadCount: { $sum: '$isUnread' }
+                }
+            }
+        ]);
+
+        if (!messages.length) return {};
+
+        const lastMessageIds = messages.map(m => m.lastMessageId);
+
+        const messageDocs = await Message.find({
+            _id: { $in: lastMessageIds }
+        });
+
+        const docMap = {};
+        messageDocs.forEach(doc => {
+            docMap[doc._id.toString()] = doc;
+        });
+
+        const result = {};
+
+        messages.forEach(m => {
+            const contactId = m._id.toString();
+            const doc = docMap[m.lastMessageId.toString()];
+
+            if (!doc) return;
+
+            result[contactId] = {
+                messages: [
+                    {
+                        messageId: doc._id,
+                        messageContent: doc.content,
+                        sender: doc.sender,
+                        receiver: doc.receiver,
+                        timestamp: doc.createdAt,
+                        status: doc.status
+                    }
+                ],
+                unreadCount: m.unreadCount
+            };
+        });
+
+        return result;
+    }
+
+    async getUserLastMessages(userId) {
+        const contacts = await UserContact.find({
+            userId: new ObjectId(userId),
+            isFriend: true
+        }).select('contactUserId');
+
+        if (!contacts.length) return {};
+
+        const contactIds = contacts.map(c => c.contactUserId);
+
+        // ── Pipeline 1: last 100 messages per contact (display) ──────────────────
+        const messages = await Message.aggregate([
+            {
+                $match: {
+                    isDeleted: false,
+                    $or: [
+                        { sender: new ObjectId(userId), receiver: { $in: contactIds } },
+                        { receiver: new ObjectId(userId), sender: { $in: contactIds } }
+                    ]
+                }
+            },
+            {
+                $addFields: {
+                    chatPartner: {
+                        $cond: {
+                            if: { $eq: ['$sender', new ObjectId(userId)] },
+                            then: '$receiver',
+                            else: '$sender'
+                        }
+                    }
+                }
+            },
+            { $sort: { createdAt: -1 } },
+            {
+                $group: {
+                    _id: '$chatPartner',
+                    messages: { $push: '$$ROOT' }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    contactUserId: '$_id',
+                    messages: { $slice: ['$messages', 100] }
+                }
+            },
+            {
+                $set: {
+                    messages: { $reverseArray: '$messages' }
+                }
+            }
+        ]);
+
+        // ── Pipeline 2: unread count per contact ───────────
+        const unreadCounts = await Message.aggregate([
+            {
+                $match: {
+                    receiver: new ObjectId(userId),
+                    sender: { $in: contactIds },
+                    status: { $in: ['sent', 'delivered'] },
+                    isDeleted: false
+                }
+            },
+            {
+                $group: {
+                    _id: '$sender',
+                    unreadCount: { $sum: 1 }
+                }
+            }
+        ]);
+
+        // Map unreadCounts to { contactId: count } for O(1) lookup
+        const unreadMap = {};
+        unreadCounts.forEach(({ _id, unreadCount }) => {
+            unreadMap[_id.toString()] = unreadCount;
+        });
+
+        // ── Merge both results
+        const result = {};
+
+        messages.forEach(chat => {
+            const contactId = chat.contactUserId.toString();
+
+            result[contactId] = {
+                messages: chat.messages.map(msg => ({
+                    messageId: msg._id,
+                    messageContent: Message.decryptContent(msg.encryptedContent, msg.iv),
+                    sender: msg.sender,
+                    receiver: msg.receiver,
+                    timestamp: msg.createdAt,
+                    status: msg.status
+                })),
+                unreadCount: unreadMap[contactId] ?? 0
+            };
+        });
+
+        return result;
     }
 
 
@@ -610,199 +753,7 @@ class ChatRepository {
         }
     }
 
-    //User Display Message
-    async getUserDisplayMessage(userId) {
 
-        const contacts = await UserContact.find({
-            userId: new ObjectId(userId),
-            isFriend: true
-        }).select('contactUserId');
-
-        if (!contacts.length) return {};
-
-        const contactIds = contacts.map(c => c.contactUserId);
-
-        const messages = await Message.aggregate([
-            {
-                $match: {
-                    isDeleted: false,
-                    $or: [
-                        { sender: new ObjectId(userId), receiver: { $in: contactIds } },
-                        { receiver: new ObjectId(userId), sender: { $in: contactIds } }
-                    ]
-                }
-            },
-            {
-                $addFields: {
-                    chatPartner: {
-                        $cond: {
-                            if: { $eq: ['$sender', new ObjectId(userId)] },
-                            then: '$receiver',
-                            else: '$sender'
-                        }
-                    },
-                    isUnread: {
-                        $cond: {
-                            if: {
-                                $and: [
-                                    { $eq: ['$receiver', new ObjectId(userId)] },
-                                    { $eq: ['$status', 'delivered'] }
-                                ]
-                            },
-                            then: 1,
-                            else: 0
-                        }
-                    }
-                }
-            },
-            { $sort: { createdAt: -1 } },
-            {
-                $group: {
-                    _id: '$chatPartner',
-                    lastMessageId: { $first: '$_id' },
-                    unreadCount: { $sum: '$isUnread' }
-                }
-            }
-        ]);
-
-        if (!messages.length) return {};
-
-        const lastMessageIds = messages.map(m => m.lastMessageId);
-
-        const messageDocs = await Message.find({
-            _id: { $in: lastMessageIds }
-        });
-
-        const docMap = {};
-        messageDocs.forEach(doc => {
-            docMap[doc._id.toString()] = doc;
-        });
-
-        const result = {};
-
-        messages.forEach(m => {
-            const contactId = m._id.toString();
-            const doc = docMap[m.lastMessageId.toString()];
-
-            if (!doc) return;
-
-            result[contactId] = {
-                messages: [
-                    {
-                        messageId: doc._id,
-                        messageContent: doc.content,
-                        sender: doc.sender,
-                        receiver: doc.receiver,
-                        timestamp: doc.createdAt,
-                        status: doc.status
-                    }
-                ],
-                unreadCount: m.unreadCount
-            };
-        });
-
-        return result;
-    }
-
-    async getUserLastMessages(userId) {
-        const contacts = await UserContact.find({
-            userId: new ObjectId(userId),
-            isFriend: true,
-            isBlocked: false
-        }).select('contactUserId');
-
-        if (!contacts.length) return {};
-
-        const contactIds = contacts.map(c => c.contactUserId);
-
-        // ── Pipeline 1: last 100 messages per contact (display) ──────────────────
-        const messages = await Message.aggregate([
-            {
-                $match: {
-                    isDeleted: false,
-                    $or: [
-                        { sender: new ObjectId(userId), receiver: { $in: contactIds } },
-                        { receiver: new ObjectId(userId), sender: { $in: contactIds } }
-                    ]
-                }
-            },
-            {
-                $addFields: {
-                    chatPartner: {
-                        $cond: {
-                            if: { $eq: ['$sender', new ObjectId(userId)] },
-                            then: '$receiver',
-                            else: '$sender'
-                        }
-                    }
-                }
-            },
-            { $sort: { createdAt: -1 } },
-            {
-                $group: {
-                    _id: '$chatPartner',
-                    messages: { $push: '$$ROOT' }
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    contactUserId: '$_id',
-                    messages: { $slice: ['$messages', 100] }
-                }
-            },
-            {
-                $set: {
-                    messages: { $reverseArray: '$messages' }
-                }
-            }
-        ]);
-
-        // ── Pipeline 2: unread count per contact ───────────
-        const unreadCounts = await Message.aggregate([
-            {
-                $match: {
-                    receiver: new ObjectId(userId),
-                    sender: { $in: contactIds },
-                    status: { $in: ['sent', 'delivered'] },
-                    isDeleted: false
-                }
-            },
-            {
-                $group: {
-                    _id: '$sender',
-                    unreadCount: { $sum: 1 }
-                }
-            }
-        ]);
-
-        // Map unreadCounts to { contactId: count } for O(1) lookup
-        const unreadMap = {};
-        unreadCounts.forEach(({ _id, unreadCount }) => {
-            unreadMap[_id.toString()] = unreadCount;
-        });
-
-        // ── Merge both results
-        const result = {};
-
-        messages.forEach(chat => {
-            const contactId = chat.contactUserId.toString();
-
-            result[contactId] = {
-                messages: chat.messages.map(msg => ({
-                    messageId: msg._id,
-                    messageContent: Message.decryptContent(msg.encryptedContent, msg.iv),
-                    sender: msg.sender,
-                    receiver: msg.receiver,
-                    timestamp: msg.createdAt,
-                    status: msg.status
-                })),
-                unreadCount: unreadMap[contactId] ?? 0
-            };
-        });
-
-        return result;
-    }
 }
 
 module.exports = new ChatRepository();

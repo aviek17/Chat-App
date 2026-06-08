@@ -5,7 +5,7 @@ const logger = require("../utils/logger");
 const User = require('../models/User');
 const ProfilePhoto = require("../models/ProfilePicture");
 const { default: mongoose } = require("mongoose");
-const userContact = require("../models/chats/PrivateChat/userContact");
+const userContact = require("../models/UserContact");
 
 const findUserByEmail = async (email, includePassword = false) => {
   const query = User.findOne({ email });
@@ -14,7 +14,6 @@ const findUserByEmail = async (email, includePassword = false) => {
   }
   return await query;
 };
-
 
 const createUser = async (userData) => {
   const user = new User(userData);
@@ -71,8 +70,6 @@ const updateProfilePhoto = async (userData, photoData) => {
 }
 
 const userInfoOnPhoneNumber = async (userid, phoneNumber) => {
-
-  console.log("user ID:", userid);
 
   const currentUserObjectId = new mongoose.Types.ObjectId(userid.id);
 
@@ -151,8 +148,6 @@ const userInfoOnPhoneNumber = async (userid, phoneNumber) => {
   return result;
 };
 
-
-
 const addNewContacts = async (userData, contactData) => {
   const senderUserId = new mongoose.Types.ObjectId(userData.id);
   const senderUserName = userData.username;
@@ -226,7 +221,6 @@ const addNewContacts = async (userData, contactData) => {
 
   return { contactResultReceiver, contactResultSender };
 }
-
 
 const getAllContacts = async (userId) => {
   const contactList = await userContact.aggregate([
@@ -308,10 +302,10 @@ const getAllContacts = async (userId) => {
       $project: {
         _id: 0,
 
-        isFavorite: 1,
-        isBlocked: 1,
-        isArchived: 1,
-        isMuted: 1,
+        // isFavorite: 1,
+        // isBlocked: 1,
+        // isArchived: 1,
+        // isMuted: 1,
         contactNickname: 1,
 
         user: {
@@ -340,7 +334,6 @@ const getAllContacts = async (userId) => {
   ]);
   return contactList ?? [];
 }
-
 
 const acceptUserRequest = async (userId, contactUserId) => {
   const acceptorUserId = new mongoose.Types.ObjectId(userId);
@@ -382,10 +375,10 @@ const acceptUserRequest = async (userId, contactUserId) => {
       const pic = userDoc.profilePicture;
       return {
         contactNickname: contactRow.contactNickname,
-        isArchived: contactRow.isArchived,
-        isBlocked: contactRow.isBlocked,
-        isFavorite: contactRow.isFavorite,
-        isMuted: contactRow.isMuted,
+        // isArchived: contactRow.isArchived,
+        // isBlocked: contactRow.isBlocked,
+        // isFavorite: contactRow.isFavorite,
+        // isMuted: contactRow.isMuted,
         user: {
           id: userDoc._id,
           uid: userDoc.uid,
@@ -416,7 +409,6 @@ const acceptUserRequest = async (userId, contactUserId) => {
     session.endSession();
   }
 };
-
 
 const rejectUserRequest = async (userId, contactUserId) => {
   const rejectorUserId = new mongoose.Types.ObjectId(userId);
@@ -457,7 +449,6 @@ const rejectUserRequest = async (userId, contactUserId) => {
     session.endSession();
   }
 }
-
 
 //logged in user need to accepth this request
 const getUserPendingRequests = async (userId) => {
@@ -516,7 +507,6 @@ const getUserPendingRequests = async (userId) => {
 
   return response;
 }
-
 
 //logged in user send those requests that need to be accepted by other user
 const getContactPendingRequests = async (userId) => {

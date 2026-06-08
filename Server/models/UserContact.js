@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const logger = require("../../../utils/logger");
+const logger = require("../utils/logger");
 
 const contactSchema = new mongoose.Schema({
     userId: {
@@ -26,10 +26,10 @@ const contactSchema = new mongoose.Schema({
         value: { type: String, required: true, trim: true }
     },
     isPending: { type: Boolean, default: true },
-    isFavorite: { type: Boolean, default: false },
-    isBlocked: { type: Boolean, default: false },
-    isArchived: { type: Boolean, default: false },
-    isMuted: { type: Boolean, default: false },
+    // isFavorite: { type: Boolean, default: false },
+    // isBlocked: { type: Boolean, default: false },
+    // isArchived: { type: Boolean, default: false },
+    // isMuted: { type: Boolean, default: false },
     isFriend: { type: Boolean, default: false },
     addedAt: { type: Date, default: Date.now }
 }, { timestamps: true });
@@ -38,9 +38,9 @@ const contactSchema = new mongoose.Schema({
 contactSchema.index({ userId: 1, contactUserId: 1 }, { unique: true });
 
 contactSchema.index({ userId: 1, isPending: 1 });
-contactSchema.index({ userId: 1, isBlocked: 1 });
-contactSchema.index({ userId: 1, isFavorite: 1 });
-contactSchema.index({ userId: 1, isArchived: 1 });
+// contactSchema.index({ userId: 1, isBlocked: 1 });
+// contactSchema.index({ userId: 1, isFavorite: 1 });
+// contactSchema.index({ userId: 1, isArchived: 1 });
 contactSchema.index({ 'addedBy.source': 1, 'addedBy.value': 1 });
 
 

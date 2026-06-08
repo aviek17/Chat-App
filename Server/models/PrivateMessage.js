@@ -1,64 +1,70 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
-const logger = require("../../../utils/logger");
+const logger = require("../utils/logger");
 
 
 // Encryption configuration
-const ENCRYPTION_KEY = Buffer.from(process.env.MESSAGE_ENCRYPTION_KEY, 'hex'); 
+const ENCRYPTION_KEY = Buffer.from(process.env.MESSAGE_ENCRYPTION_KEY, 'hex');
 const ALGORITHM = process.env.MESSAGE_ENCRYPTION_ALGO;
 
 
 const messageSchema = new mongoose.Schema({
-    sender: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    receiver: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    encryptedContent: {
-        type: String,
-        required: true
-    },
-    iv: {
-        type: String,
-        required: true
-    },
-    status: {
-        type: String,
-        enum: ['sent', 'delivered', 'read'],
-        default: 'sent'
-    },
-    readAt: {
-        type: Date,
-        default: null
-    },
-    deliveredAt: {
-        type: Date,
-        default: null
-    },
-    editedAt: {
-        type: Date,
-        default: null
-    },
-    isDeleted: {
-        type: Boolean,
-        default: false
-    },
-    deletedAt: {
-        type: Date,
-        default: null
-    },
-    attachment: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'MessageAttachment',
-        default: null
-    }
+  sender: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  receiver: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  encryptedContent: {
+    type: String,
+    required: true
+  },
+  iv: {
+    type: String,
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['sent', 'delivered', 'read'],
+    default: 'sent'
+  },
+  tag: {
+    type: String,
+    default: '',
+    trim: true,
+    maxlength: 50
+  },
+  readAt: {
+    type: Date,
+    default: null
+  },
+  deliveredAt: {
+    type: Date,
+    default: null
+  },
+  editedAt: {
+    type: Date,
+    default: null
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false
+  },
+  deletedAt: {
+    type: Date,
+    default: null
+  },
+  attachment: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'MessageAttachment',
+    default: null
+  }
 }, {
-    timestamps: true
+  timestamps: true
 });
 
 
@@ -66,6 +72,7 @@ const messageSchema = new mongoose.Schema({
 // Compound indexes for efficient chat queries
 messageSchema.index({ sender: 1, receiver: 1, createdAt: -1 });
 messageSchema.index({ receiver: 1, status: 1 });
+messageSchema.index({ tag: 1, createdAt: -1 }, { partialFilterExpression: { tag: { $ne: '' } } });
 
 
 // Virtual: Consistent chatRoom ID
