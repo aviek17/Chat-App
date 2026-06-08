@@ -11,13 +11,14 @@ class SocketConnectionManager {
         this.io = io;
         this.activeUsers = new Map();
         this.typingUsers = new Map();
+        this.activeChat = new Map();
         // this.userRooms = new Map();   
 
 
         this.chatSocketService = new ChatSocketService(io, {
             activeUsers: this.activeUsers,
             typingUsers: this.typingUsers,
-            userRooms: this.userRooms,
+            activeChats : this.activeChat
         });
 
         this.userSocketService = new UserSocketService(io, {

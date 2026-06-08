@@ -33,8 +33,20 @@ export class ChatEvents {
         socketManager.off('user_update_message_status_delivered', callback);
     }
 
+    static onMessageReadByFriend(callback) {
+        socketManager.on('message_read_by_friend', callback);
+    }
+
+     static offMessageReadByFriend(callback) {
+        socketManager.off('message_read_by_friend', callback);
+    }
+
     static onMsgReadStatusUpdate(data) {
         socketManager.emit('message_read', data);
+    }
+
+    static onActiveChatSelection(data){
+        socketManager.emit("active_chat", data);
     }
 
 

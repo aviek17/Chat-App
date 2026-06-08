@@ -5,9 +5,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import NewContactContainer from '../components/NewContact';
 import { ChatEvents } from '../sockets/events/chat';
 import { setSelectedUserInfo, setUserMessages, setUserProfilePicture } from '../store/slice/selectedUserSlice';
-import { getBase64FromFile, getStaticImageUrl } from '../services/common.service';
-import { getContactList } from '../services/user.service';
-import { resetUserUnreadMsgCount, updateuserStatusInMeesageList, updateUserUnreadMsgCount } from '../store/slice/allUserMessageSlice';
+import { getStaticImageUrl } from '../services/common.service';
+import { resetUserUnreadMsgCount, updateUserMessageStatusRead } from '../store/slice/allUserMessageSlice';
 
 
 const formatDateTime = (datetimeStr) => {
@@ -37,7 +36,6 @@ const formatDateTime = (datetimeStr) => {
 
 const ChatListContainerExternal = () => {
   const theme = useSelector((state) => state.theme.themeMode);
-  const messageList = useSelector((state) => state.messageList.allChatList);
   const [moreOtionsOpen, setMoreOptionsOpen] = useState(false);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newContactOpen, setNewContactOpen] = useState(false);
@@ -136,16 +134,18 @@ const ChatListContainerExternal = () => {
 
   const updateUserReadMsgStatus = (senderId) => {
     const data = { senderId };
-    dispatch(updateuserStatusInMeesageList({ userId: senderId, newStatus: 'read' }));
+    dispatch(updateUserMessageStatusRead({ userId: senderId, userType : "sender" }));
+
+    // inform sender that logged in user has read messages
     ChatEvents.onMsgReadStatusUpdate(data);
   }
 
 
-  const updateUserMessageList = (userId) => {
-    if (userDisplayMessages[userId] && userDisplayMessages[userId]?.messages && userDisplayMessages[userId]?.messages?.length > 0) {
-      dispatch(setUserMessages(userDisplayMessages[userId]?.messages));
-    }
-  }
+  // const updateUserMessageList = (userId) => {
+  //   if (userDisplayMessages[userId] && userDisplayMessages[userId]?.messages && userDisplayMessages[userId]?.messages?.length > 0) {
+  //     dispatch(setUserMessages(userDisplayMessages[userId]?.messages));
+  //   }
+  // }
 
   const openChatContainer = (userInfo) => {
     let userData = {
@@ -169,10 +169,10 @@ const ChatListContainerExternal = () => {
 
     updateUserReadMsgStatus(userInfo.user.id);
 
-    updateUserMessageList(userInfo.user.id);
+    ChatEvents.onActiveChatSelection({chatWithUserId : userInfo.user.id});
 
-    // ChatEvents.onReceivingUserStatus(onReceivingUserStatus);
-    // ChatEvents.getUserOnlineStatus({ userId: chatPartner._id });
+    // updateUserMessageList(userInfo.user.id);
+
   }
 
   const oprnNewContactModal = () => {

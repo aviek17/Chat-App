@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { updateLastestMessageForUser, updateuserStatusInMeesageList, updateUserUnreadMsgCount } from "../../store/slice/allUserMessageSlice";
+import { updateLastestMessageForUser, updateUserMessageStatusDelivered, updateUserMessageStatusRead, updateUserUnreadMsgCount } from "../../store/slice/allUserMessageSlice";
 import { setUserNewMessage } from "../../store/slice/selectedUserSlice";
 import { MessageEvents } from '../events/message';
 import { ChatEvents } from "../events/chat";
@@ -42,20 +42,29 @@ export const useChatSocketEvents = (isAuthenticated) => {
             }
         };
 
-        const handleOnUserOnlineMessageStatusDelivered = ({ userId }) => {
-            dispatch(updateuserStatusInMeesageList({
-                userId,
-                newStatus: 'delivered'
+        // message read by friend
+        const handleMessageReadByFriend = (data) => {
+            dispatch(updateUserMessageStatusRead({
+                userId : data?.receiverId,
+                userType : 'receiver'
             }));
+        }
 
+        const handleOnUserOnlineMessageStatusDelivered = ({ userId }) => {
+            dispatch(updateUserMessageStatusDelivered({
+                userId,
+                userType: 'receiver'
+            }));
         };
 
         MessageEvents.onNewMessage(handleMessageReceived);
         ChatEvents.onNewUserMessageStatusUpdateDelivered(handleOnUserOnlineMessageStatusDelivered);
+        ChatEvents.onMessageReadByFriend(handleMessageReadByFriend);
 
         return () => {
             MessageEvents.offNewMessage(handleMessageReceived);
             ChatEvents.offNewUserMessageStatusUpdateDelivered(handleOnUserOnlineMessageStatusDelivered);
+            ChatEvents.offMessageReadByFriend(handleMessageReadByFriend);
         }
 
     }, [isAuthenticated])

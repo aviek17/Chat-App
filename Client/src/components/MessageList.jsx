@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 const MessageList = ({ selectedUserId, theme, colors, profilePic }) => {
   const messagesEndRef = useRef(null);
   const scrollTimeoutRef = useRef(null);
-  const messages = useSelector(state => state?.selectedUser?.messages ?? []);
+  const messages = useSelector(state => state?.allUsersMsgs?.[selectedUserId]?.messages ?? []);
   
   const currentColors = {
     background: colors.background[theme],

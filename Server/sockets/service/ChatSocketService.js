@@ -3,11 +3,12 @@ const { validateObjectId, validateMessageContent } = require('../../validation/m
 const log = require('../../utils/logger');
 
 class ChatSocketService {
-  constructor(io, { activeUsers, typingUsers, userRooms } = {}) {
+  constructor(io, { activeUsers, typingUsers, activeChats } = {}) {
     this.io = io;
     this.chatRepository = ChatRepository;
     this.activeUsers = activeUsers ?? new Map();
     this.typingUsers = typingUsers ?? new Map();
+    this.activeChats = activeChats ?? new Map();
     // this.userRooms   = userRooms   ?? new Map();
   }
 
@@ -62,7 +63,7 @@ class ChatSocketService {
 
       friends.forEach(friendId => {
         const friendSocketId = this.activeUsers.get(friendId);
-        if (!friendSocketId) return; 
+        if (!friendSocketId) return;
         this.io.to(friendSocketId).emit('new_user_online', { userId });
       });
 
@@ -119,10 +120,20 @@ class ChatSocketService {
       const receiverSocketId = this.activeUsers.get(receiverId);
       const senderSocketId = this.activeUsers.get(senderId);
 
+      let newMessageStatus = 'sent';
+      if(receiverSocketId){
+        const receiverActiveChatId = this.activeChats.get(receiverId);
+        if(receiverActiveChatId && receiverActiveChatId === senderId){
+          newMessageStatus = 'read';
+        }else{
+          newMessageStatus = 'delivered';
+        }
+      }
+
       const messageData = {
         sender: senderId,
         receiver: receiverId,
-        status: receiverSocketId ? 'delivered' : 'sent',
+        status: newMessageStatus,
         content
       };
 
@@ -146,6 +157,17 @@ class ChatSocketService {
   async handleMessageRead(socket, data) {
     try {
       const response = await this.chatRepository.markMessagesAsRead(data.senderId, socket.userId);
+
+      // updating the sender id in ui that message has been read
+      const senderSocketId = this.activeUsers.get(data.senderId);
+      console.log(senderSocketId, response);
+      if (senderSocketId) {
+        if (response !== null && response > 0) {
+          this.io.to(senderSocketId).emit('message_read_by_friend', { receiverId: socket.userId });
+        }
+      }
+
+
     } catch (err) {
       console.log(err)
       log.error('Message read error from here:', err);
@@ -168,6 +190,22 @@ class ChatSocketService {
       }
     } catch (error) {
       console.error('Notify new contact error: ', error);
+    }
+  }
+
+  // Handle active chats
+  async handleActiveChat(socket, data) {
+    const { chatWithUserId } = data;
+    const userId = socket.userId;
+
+    if (!userId) return;
+
+    if (chatWithUserId) {
+      this.activeChats.set(userId, chatWithUserId); // user opened a chat
+      log.info(`User ${userId} is now chatting with ${chatWithUserId}`);
+    } else {
+      this.activeChats.delete(userId); // user closed the chat
+      log.info(`User ${userId} closed active chat`);
     }
   }
 
