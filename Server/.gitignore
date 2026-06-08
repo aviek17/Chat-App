@@ -2,3 +2,4 @@ node_modules
 dist
 private/firebaseConfig.json
 .env
+Server.zip

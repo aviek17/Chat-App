@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 .env
+Client.zip
 
 # Editor directories and files
 .vscode/*
