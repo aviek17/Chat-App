@@ -68,7 +68,7 @@ class ChatSocketService {
       });
 
       // get all users who has sent messages while user was offline
-      const senderIds = await this.chatRepository.getSendersWithPendingMessages(userId);
+      const senderIds = await this.chatRepository.getSendersWithPendingMessagesAndUpdateStatusDelivered(userId);
 
       const friendIdsSet = new Set(friends);
 
