@@ -4,6 +4,7 @@ const User = require('../models/User');
 const { ObjectId } = require('mongoose').Types;
 const crypto = require('crypto');
 const UserContact = require("../models/UserContact");
+const ChatPreference = require('../models/ChatPreference');
 
 
 const ENCRYPTION_KEY = Buffer.from(process.env.MESSAGE_ENCRYPTION_KEY, 'hex');
@@ -194,8 +195,11 @@ class ChatRepository {
     }
 
     async getUserLastMessages(userId) {
+
+        const userObjectId = new ObjectId(userId);
+
         const contacts = await UserContact.find({
-            userId: new ObjectId(userId),
+            userId: userObjectId,
             isFriend: true
         }).select('contactUserId');
 
@@ -203,7 +207,20 @@ class ChatRepository {
 
         const contactIds = contacts.map(c => c.contactUserId);
 
-        // ── Pipeline 1: last 100 messages per contact (display) ──────────────────
+        const prefs = await ChatPreference.find({
+            userId: userObjectId,
+            friendId: { $in: contactIds }
+        }).select('friendId isHidden clearedAt');
+
+
+        const prefMap = {};
+        prefs.forEach(pref => {
+            prefMap[pref.friendId.toString()] = pref;
+        });
+
+
+
+        // ── Pipeline: last 100 messages per contact (display) ──────────────────
         const messages = await Message.aggregate([
             {
                 $match: {
@@ -246,46 +263,37 @@ class ChatRepository {
             }
         ]);
 
-        // ── Pipeline 2: unread count per contact ───────────
-        const unreadCounts = await Message.aggregate([
-            {
-                $match: {
-                    receiver: new ObjectId(userId),
-                    sender: { $in: contactIds },
-                    status: { $in: ['sent', 'delivered'] },
-                    isDeleted: false
-                }
-            },
-            {
-                $group: {
-                    _id: '$sender',
-                    unreadCount: { $sum: 1 }
-                }
-            }
-        ]);
-
-        // Map unreadCounts to { contactId: count } for O(1) lookup
-        const unreadMap = {};
-        unreadCounts.forEach(({ _id, unreadCount }) => {
-            unreadMap[_id.toString()] = unreadCount;
-        });
-
-        // ── Merge both results
         const result = {};
 
         messages.forEach(chat => {
             const contactId = chat.contactUserId.toString();
+            const pref = prefMap[contactId];
 
-            result[contactId] = {
-                messages: chat.messages.map(msg => ({
+            const filtered = pref
+                ? pref.filterMessages(chat.messages)
+                : chat.messages;
+
+            let unreadCount = 0;
+            const mappedMessages = filtered.map(msg => {
+                if (
+                    msg.receiver.toString() === userId &&
+                    ['sent', 'delivered'].includes(msg.status)
+                ) unreadCount++;
+
+                return {
                     messageId: msg._id,
                     messageContent: Message.decryptContent(msg.encryptedContent, msg.iv),
                     sender: msg.sender,
                     receiver: msg.receiver,
                     timestamp: msg.createdAt,
                     status: msg.status
-                })),
-                unreadCount: unreadMap[contactId] ?? 0
+                };
+            });
+
+            result[contactId] = {
+                messages: mappedMessages,
+                unreadCount: unreadCount,
+                isChatHidden: pref.isHidden
             };
         });
 

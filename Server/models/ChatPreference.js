@@ -194,7 +194,8 @@ ChatPreferenceSchema.statics.isBlocked = async function (userId, friendId) {
 
 // Apply preferences filter to a messages array
 ChatPreferenceSchema.methods.filterMessages = function (messages) {
-    if (!messages?.length) return [];
+    if (messages?.length === 0) return [];
+    if(this.isHidden) return [];
     if (!this.clearedAt) return messages;
     return messages.filter(msg => msg.createdAt > this.clearedAt);
 };

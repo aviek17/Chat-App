@@ -10,6 +10,7 @@ import { resetUserUnreadMsgCount, updateUserMessageStatusRead } from '../store/s
 
 
 const formatDateTime = (datetimeStr) => {
+  if(!datetimeStr) return "";  
   const date = new Date(datetimeStr);
   const now = new Date();
 
