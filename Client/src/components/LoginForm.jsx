@@ -92,6 +92,8 @@ const LoginForm = () => {
 
         try {
             const response = await login(formData);
+            import('../layouts/MainLayout');
+            import('../pages/MainContainer');
             if (response.token) {
                 localStorage.setItem('token', response.token);
                 dispatch(setToken(response.token));

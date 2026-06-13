@@ -1,28 +1,11 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getStaticImageUrl } from "../services/common.service";
-import { getContactList, requestApproval } from "../services/user.service";
+import {requestApproval } from "../services/user.service";
 import { acceptFriendRequest, rejectFriendrequest } from "../store/slice/friendSlice";
-import { addContact, setContacts } from "../store/slice/contactSlice";
-import { useCommonApi } from "../hooks/useCommonApi";
+import { addContact } from "../store/slice/contactSlice";
 import { UserEvents } from "../sockets/events/user";
 
-const contacts = [
-    { id: 1, name: "Mazumder Khushi", mutual: null, followed: null },
-    { id: 2, name: "Ajoy Dey", mutual: null, followed: null },
-    { id: 3, name: "Durga Bhattacharjee", mutual: 25, followed: null },
-    { id: 4, name: "Jhuma Kundu", mutual: 7, followed: null },
-    { id: 5, name: "Vikrant Dey", mutual: 101, followed: null },
-    { id: 6, name: "Jhuma Kundu", mutual: 6, followed: null },
-    { id: 7, name: "Pintu Kundu", mutual: 1, followed: null },
-    { id: 8, name: "Rozina Rahman Barla", mutual: 55, followed: null },
-    { id: 9, name: "Ritshika Dasgupta", mutual: 59, followed: null },
-    { id: 10, name: "Sayanika Dey", mutual: 71, followed: null },
-    { id: 11, name: "Jhuma Kundu", mutual: 5, followed: null },
-    { id: 12, name: "Sourav Chowdhury", mutual: 65, followed: null },
-    { id: 13, name: "Nishi Paul", mutual: null, followed: 647 },
-    { id: 14, name: "Nirupom Deb", mutual: 4, followed: null },
-];
 
 function UserSVG() {
     return (
@@ -268,8 +251,6 @@ function RequestSentDisabled({ onClick }) {
 
 
 export const ContactMainContainer = () => {
-    const [cards, setCards] = useState(contacts.slice(0, 12));
-
     const [activeTab, setActiveTab] = useState("pending");
 
     const state = useSelector((state) => state);
@@ -355,7 +336,7 @@ export const ContactMainContainer = () => {
 
                         <button
                             className="text-sm font-semibold text-[#005498] cursor-pointer"
-                            onClick={() => setCards(contacts)}
+                            
                         >
                             See all
                         </button>
