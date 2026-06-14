@@ -154,7 +154,7 @@ const ChatListContainerExternal = () => {
       displayName: userInfo.user.displayName,
       bio: userInfo.user.bio,
       phoneNo: userInfo.user.phoneNumber,
-      email: "",
+      email: userInfo.user.email ?? "",
       isOnline: false,
       username: userInfo.user.username,
       nickName: userInfo.contactNickname || ""

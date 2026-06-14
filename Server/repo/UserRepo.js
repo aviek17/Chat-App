@@ -354,6 +354,7 @@ class UserRepository {
             username: '$user.username',
             bio: '$user.bio',
             phoneNumber: '$user.phoneNumber',
+            email: '$user.email',
 
             avatar: {
               $cond: {
